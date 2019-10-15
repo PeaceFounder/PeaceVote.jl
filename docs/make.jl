@@ -1,5 +1,5 @@
 using Documenter
-
+using PeaceVote
 makedocs(sitename="PeaceVote.jl",pages = ["index.md"])
 
 deploydocs(
