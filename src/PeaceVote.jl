@@ -52,7 +52,6 @@ A process which incrementally keeps local database in sync with Community server
 """
 mirror(cs::CommunityServer,c::Community) = error("Must be implemented by a Community")
 
-
 ### Maintainter tools
 
 """
@@ -71,7 +70,6 @@ addserver!(c::Community,ip,key::KeyManager) = addserver!(c::Community,ip,publick
 Adds proposal to the repository. Maintainer designs the proposal as a .toml file where question and options are being defined.
 """
 addproposal!(c::Community,proposal::Proposal) = error("Must be implemented by a Community")
-
 
 """
 Filters all votes from the database with a hash. Makes a file for git repo with votes/$hash. puts all signed valid votes in there. Adds files to the git. pushes the changes to the remote.
@@ -96,8 +94,8 @@ getanonymouskeys!(c::Community,key::KeyManager) = getanonymouskeys!(c::Community
 """
 Checks if the ip address is in the repo. If not errors. The server which collects the votes anonymously. Generally it does not need to be a server at all.
 """
-servedatabase(cs::CommunityServer,serverprivatekey) = error("Must be implemented by a Community")
-servedatabase(cs::CommunityServer,key::KeyManager) = servedatabase(cs,key.servers[cs.ip])
+collectionserver(cs::CommunityServer,serverprivatekey) = error("Must be implemented by a Community")
+collectionserver(cs::CommunityServer,key::KeyManager) = servedatabase(cs,key.servers[cs.ip])
 
 ### Voting
 
@@ -123,10 +121,11 @@ Creates a signature of the message with votingkey and sends that anonymously to 
 """
 vote(c::CommunityServer,hashsum,message,votekey) = error("Must be implemented by a Community")
 vote(c::CommunityServer,hashsum,message,key::KeyManager) = vote(c,hashsum,message,key.votekey)
+vote(c::CommunityServer,proposal::Proposal,message,key::KeyManager) = vote(c,proposal.hash,message,key.votekey)
 
 export publickeys, proposals, votes, countvotes, clone, mirror
 export initcommunity, addserver!, addproposal!, mergevotes!, pushchanges
-export getanonymouskeys!, servedatabase
+export getanonymouskeys!, collectionserver
 export checkvotekey, getvotekey, sendanonymously, vote
 
 end # module

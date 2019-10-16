@@ -97,7 +97,7 @@ pushchanges
 
 ```@docs
 getanonymouskeys!
-servedatabase
+collectionserver
 ```
 
 ## User voting
