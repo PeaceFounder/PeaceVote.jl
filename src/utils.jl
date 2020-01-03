@@ -1,6 +1,5 @@
 struct Ticket
-    uuid
-    id
+    id # id is uuid itself
 end
 
 struct Braid
@@ -15,9 +14,8 @@ struct Vote
 end
 
 function voters!(voters::Set,braid::Braid)
-    @show voters, braid
     for i in braid.input
-        #@assert i in voters
+        @assert i in voters
     end
     
     for i in braid.input
@@ -32,7 +30,7 @@ end
 function voters!(voters::Set,messages::Vector)
     for msg in messages
         if typeof(msg) == Ticket
-            push!(voters,msg)
+            push!(voters,msg.id)
         elseif typeof(msg) == Braid
             voters!(voters,msg)
         elseif typeof(msg) == Vote
