@@ -7,6 +7,34 @@ function save(s,fname)
     serialize(fname,s)
 end
 
+# In the end one should be able to also start the server through PeaceVote. 
+struct Server <: AbstractSigner
+    uuid
+    id
+    sign::Function
+end
+
+"""
+Gives a member key of the community. If does not exist it is generated. It is possible to reffine dispatch in the future with respseect to config file or such. Perhaps with respect to device. 
+"""
+function Server(community::Community,account)
+    fname = keydir(community) * account * "/server"
+
+    if !isfile(fname)
+        @info "Creating a new server for the community"
+        s = community.Signer()
+        save(s,fname)
+    end
+    
+    signer = deserialize(fname)
+    sign(data) = community.Signature(data,signer)
+
+    return Server(community.uuid,community.id(signer),sign)
+end
+
+Server(community) = Maintainer(community,"")
+
+
 struct Member <: AbstractSigner
     uuid::UUID
     id
