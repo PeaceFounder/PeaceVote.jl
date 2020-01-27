@@ -1,5 +1,6 @@
 ### This file contains all functions which are necessary for accessing .peacevote/keys folder. In future it would be great to have a password prtotection so one could do easier backups.
 
+
 abstract type AbstractSigner end
 
 function save(s,fname) 
@@ -9,7 +10,7 @@ end
 
 # In the end one should be able to also start the server through PeaceVote. 
 struct Server <: AbstractSigner
-    uuid
+    uuid::UUID
     id
     sign::Function
 end
@@ -17,9 +18,9 @@ end
 """
 Gives a member key of the community. If does not exist it is generated. It is possible to reffine dispatch in the future with respseect to config file or such. Perhaps with respect to device. 
 """
-function Server(community::Community,account)
-    fname = keydir(community) * account * "/server"
-
+function Server(uuid::UUID,community::Module,account)
+    fname = keydir(uuid) * account * "/server"
+    
     if !isfile(fname)
         @info "Creating a new server for the community"
         s = community.Signer()
@@ -29,10 +30,11 @@ function Server(community::Community,account)
     signer = deserialize(fname)
     sign(data) = community.Signature(data,signer)
 
-    return Server(community.uuid,community.id(signer),sign)
+    return Server(uuid,community.id(signer),sign)
 end
 
-Server(community) = Maintainer(community,"")
+Server(uuid::UUID,account) = Server(uuid,community(uuid),account)
+Server(uuid::UUID) = Server(uuid,"")
 
 
 struct Member <: AbstractSigner
@@ -44,8 +46,8 @@ end
 """
 Gives a member key of the community. If does not exist it is generated. It is possible to reffine dispatch in the future with respseect to config file or such. Perhaps with respect to device. 
 """
-function Member(community::Community,account)
-    fname = keydir(community) * account * "/member"
+function Member(uuid::UUID,community::Module,account)
+    fname = keydir(uuid) * account * "/member"
 
     if !isfile(fname)
         @info "Creating a new member for the community"
@@ -56,10 +58,11 @@ function Member(community::Community,account)
     signer = deserialize(fname)
     sign(data) = community.Signature(data,signer)
 
-    return Member(community.uuid,community.id(signer),sign)
+    return Member(uuid,community.id(signer),sign)
 end
 
-Member(community) = Member(community,"")
+Member(uuid::UUID,account) = Member(uuid,community(uuid),account)
+Member(uuid::UUID) = Member(uuid,"")
 
 struct Maintainer <: AbstractSigner
     uuid::UUID
@@ -70,8 +73,8 @@ end
 """
 Gives key of the community. If does not exist it is generated. It is possible to reffine dispatch in the future with respseect to config file or such. Perhaps with respect to device. 
 """
-function Maintainer(community::Community,account)
-    fname = keydir(community) * account * "/maintainer"
+function Maintainer(uuid::UUID,community::Module,account)
+    fname = keydir(uuid) * account * "/maintainer"
 
     if !isfile(fname)
         @info "Creating a new maintainer for the community"
@@ -82,10 +85,11 @@ function Maintainer(community::Community,account)
     signer = deserialize(fname)
     sign(data) = community.Signature(data,signer)
 
-    return Maintainer(community.uuid,community.id(signer),sign)
+    return Maintainer(uuid,community.id(signer),sign)
 end
 
-Maintainer(community) = Maintainer(community,"")
+Maintainer(uuid::UUID,account) = Maintainer(uuid,community(uuid),account)
+Maintainer(uuid::UUID) = Maintainer(uuid,"")
 
 
 struct Voter <: AbstractSigner
@@ -94,8 +98,8 @@ struct Voter <: AbstractSigner
     sign::Function
 end
 
-function getnewestvoter(community::Community,account)
-    dir = keydir(community) * account 
+function getnewestvoter(uuid::UUID,account)
+    dir = keydir(uuid) * account 
     
     t = 0
     fname = nothing
@@ -108,22 +112,23 @@ function getnewestvoter(community::Community,account)
     return fname
 end
 
-function Voter(community::Community,account; new=false)
+function Voter(uuid::UUID,community::Module,account; new=false)
 
-    fname = getnewestvoter(community,account)
+    fname = getnewestvoter(uuid,account)
     if fname==nothing || new==true
         @info "Creating a new voter for the community"
         
         s = community.Signer()
         id = community.id(s)
-        save(s,keydir(community) * account * "/voter-$id")
+        save(s,keydir(uuid) * account * "/voter-$id")
     end
     
-    fname = getnewestvoter(community,account)
-    signer = deserialize(keydir(community) * account * "/$fname")
+    fname = getnewestvoter(uuid,account)
+    signer = deserialize(keydir(uuid) * account * "/$fname")
     sign(data) = community.Signature(data,signer)
 
-    return Voter(community.uuid,community.id(signer),sign)
+    return Voter(uuid,community.id(signer),sign)
 end
 
-Voter(community; new=false) = Voter(community,"",new=new)
+Voter(uuid::UUID,account;new=false) = Voter(uuid,community(uuid),account,new=new)
+Voter(uuid::UUID; new=false) = Voter(uuid,"",new=new)

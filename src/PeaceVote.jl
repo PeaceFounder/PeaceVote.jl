@@ -1,20 +1,62 @@
 module PeaceVote
 
 import Serialization: serialize, deserialize
-import Pkg
+
+#import Pkg
+using Pkg.Types: UUID, Context
+
+#import Pkg.Types.Context
+#import Pkg.Types.UUID
+
 
 const CONFIG_DIR = homedir() * "/.peacevote/"
+keydir(uuid::UUID) = CONFIG_DIR * "/keys/$uuid/"
+datadir(uuid::UUID) = CONFIG_DIR * "/data/$uuid/"
+communitydir(uuid::UUID) = CONFIG_DIR * "/communities/$uuid/"
 
-function __init__()
-    mkpath(CONFIG_DIR)
+NAMESPACE = PeaceVote
+
+function setnamespace(m::Module)
+    global NAMESPACE = m
 end
 
-include("community.jl")
+function setconfigdir(dir::String)
+    global CONFIG_DIR = dir
+end
+
+# function __init__()
+#     mkpath(CONFIG_DIR)
+# end
+
+function communityinfo(m::Module)
+    properties = propertynames(m)
+    api = [:G, :hash, :Signer, :Signature, :id, :unwrap, :register, :braid, :vote, :braidchain]
+    @info "Verifying API of the community module"
+    for method in api
+        method in properties || @warn "$method is not part of $m."
+    end
+end
+
+
+
+function community(uuid::UUID; info=true)
+    ctx = Context()
+    @assert uuid in ctx.env.manifest.keys "The community module is not imported in $NAMESPACE"
+    name = Symbol(ctx.env.manifest[uuid].name)
+    community = Base.eval(NAMESPACE,name)
+    info && communityinfo(community)
+    return community
+end
+
+function uuid(name::AbstractString)
+    ctx = Context()
+    return ctx.env.project.deps[name]
+end
+
 include("keys.jl")
 include("envelopes.jl")
-#include("participation.jl")
-include("utils.jl")
+include("braidchain.jl")
 
-export Community, Member, Maintainer, Voter
+export community, setnamespace
 
 end # module

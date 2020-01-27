@@ -11,7 +11,7 @@ end
 Verifies that the signature and calculates id of the public key.
 """
 function unwrap(envelope::AbstractEnvelope)
-    c = Community(envelope.uuid)
+    c = community(envelope.uuid) ### perhaps community() function would be the thing I need
     if c.verify(envelope.data,envelope.signature)
         return envelope.data, c.id(envelope.signature)::Integer
     else
@@ -48,4 +48,4 @@ end
 Certificate(id::AbstractID,signer::AbstractSigner) = Certificate(signer.uuid,id,signer.sign(id))
 Certificate(str::AbstractString) = deserilize(IOBuffer(str))
 
-export Certificate, Envelope, unwrap
+#export Certificate, Envelope, unwrap

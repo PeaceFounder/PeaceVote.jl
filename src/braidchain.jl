@@ -61,5 +61,5 @@ function child(id,braids::Vector{Braid})
     end
 end
 
-export voters!, Braid, Vote, Ticket
+#export voters!, Braid, Vote, Ticket
 

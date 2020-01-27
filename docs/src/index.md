@@ -30,57 +30,23 @@ At this point, the user is capable to vote on the proposals which are happening 
 
 When the user decides on the vote, he oppens the proposal in the app. There he finds the action to vote and puts down his choice. The choice would initiate a signing process with the private key associated with the community. Then the vote would be delivered in a way as specified in `communication.jl`. The app would then follow that the valid votes including his own remain in the public database until the bailout ends and the maintainer merges valid ballots in the git. After that, the votes are downloaded from the repo and counted as specified in `counting.jl` and the result shown next to the proposal.
 
-## The structure of the git repository
-
-The repository has the following tree structure:
-
-```
-/ledger
-  set1
-  set2
-	...
-/proposals
-  proposal1
-  proposal2
-	...
-/votes
-  proposal1
-  proposal2
-	...
-/src
-  ComunityA.jl
-  integrity.jl
-  communication.jl
-  counting.jl
-Manifest.toml
-Project.toml
-```
- 
-Let's now break down what each piece does:
-     
-- `/ledger` contains the eligible anonymous public keys which are separated in sets. Sets are the contain list of public keys which were collected by a maintainer with the single private key. The private key is also used to sign the previous block to make the database untampered.
-- `/proposals` contain the information about bailouts which had happened and the bailouts which are happening. Essentially it is like a common mailbox.
-- `/votes` contain results of the bailouts. Each bailout contains a list of signatures made by one of the keys from the anonymous public ledger collected from predefined source and merged by the maintainer. The purpose of it is to be more like a trophy as each device would count the votes from the anonymous communication source themselves.
-
-- `/src` contains the code which defines how the community is being built. Specifically:
-  - `integrity.jl` contains code which is necessary to verify that anonymous public key ledger is not tampered. 
-  - `communication.jl` establishes a protocol with which to send the vote to bailout box anonymously (like a Tor). And also it establishes the public channel for downloading the votes.
-  - `counting.jl` contains the protocol on how votes are counted. Contains logic about expiring public keys, what to do when the user had voted twice, perhaps a second choice protocol, etc. Also, it defines the majority. 
-
-
 # API
 
-
-## Information
-
+## Community initialization
 
 ```@docs
-publickeys
-proposals
-votes
-countvotes
-clone
-mirror
+PeaceVote.addcommunity
+Community
+```
+
+
+## Key managment
+
+```@docs
+Member
+Maintainer
+Voter
+Server
 ```
 
 ## Maintainer tools
