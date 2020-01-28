@@ -8,21 +8,18 @@ function save(s,fname)
     serialize(fname,s)
 end
 
-# In the end one should be able to also start the server through PeaceVote. 
-struct Server <: AbstractSigner
+
+struct Signer <: AbstractSigner
     uuid::UUID
     id
     sign::Function
 end
 
-"""
-Gives a member key of the community. If does not exist it is generated. It is possible to reffine dispatch in the future with respseect to config file or such. Perhaps with respect to device. 
-"""
-function Server(uuid::UUID,community::Module,account)
-    fname = keydir(uuid) * account * "/server"
+function Signer(uuid::UUID,community::Module,account)
+    fname = keydir(uuid) * account 
     
     if !isfile(fname)
-        @info "Creating a new server for the community"
+        @info "Creating a new signer for the community"
         s = community.Signer()
         save(s,fname)
     end
@@ -30,67 +27,19 @@ function Server(uuid::UUID,community::Module,account)
     signer = deserialize(fname)
     sign(data) = community.Signature(data,signer)
 
-    return Server(uuid,community.id(signer),sign)
+    return Signer(uuid,community.id(signer),sign)
 end
 
-Server(uuid::UUID,account) = Server(uuid,community(uuid),account)
-Server(uuid::UUID) = Server(uuid,"")
+Signer(uuid::UUID,account) = Signer(uuid,community(uuid),account)
 
+#Server(uuid::UUID) = Signer(uuid,"server")
+#Maintainer(uuid::UUID) = Signer(uuid,"maintainer")
 
-struct Member <: AbstractSigner
-    uuid::UUID
-    id
-    sign::Function
-end
-
-"""
-Gives a member key of the community. If does not exist it is generated. It is possible to reffine dispatch in the future with respseect to config file or such. Perhaps with respect to device. 
-"""
-function Member(uuid::UUID,community::Module,account)
-    fname = keydir(uuid) * account * "/member"
-
-    if !isfile(fname)
-        @info "Creating a new member for the community"
-        s = community.Signer()
-        save(s,fname)
-    end
-    
-    signer = deserialize(fname)
-    sign(data) = community.Signature(data,signer)
-
-    return Member(uuid,community.id(signer),sign)
-end
-
-Member(uuid::UUID,account) = Member(uuid,community(uuid),account)
+Member(uuid::UUID,account) = Signer(uuid,account * "/member")
 Member(uuid::UUID) = Member(uuid,"")
 
-struct Maintainer <: AbstractSigner
-    uuid::UUID
-    id
-    sign::Function
-end
 
-"""
-Gives key of the community. If does not exist it is generated. It is possible to reffine dispatch in the future with respseect to config file or such. Perhaps with respect to device. 
-"""
-function Maintainer(uuid::UUID,community::Module,account)
-    fname = keydir(uuid) * account * "/maintainer"
-
-    if !isfile(fname)
-        @info "Creating a new maintainer for the community"
-        s = community.Signer()
-        save(s,fname)
-    end
-    
-    signer = deserialize(fname)
-    sign(data) = community.Signature(data,signer)
-
-    return Maintainer(uuid,community.id(signer),sign)
-end
-
-Maintainer(uuid::UUID,account) = Maintainer(uuid,community(uuid),account)
-Maintainer(uuid::UUID) = Maintainer(uuid,"")
-
+### The KeyChain part. 
 
 struct Voter <: AbstractSigner
     uuid::UUID

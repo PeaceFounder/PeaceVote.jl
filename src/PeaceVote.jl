@@ -31,7 +31,7 @@ end
 function communityinfo(m::Module)
     properties = propertynames(m)
     api = [:G, :hash, :Signer, :Signature, :id, :unwrap, :register, :braid, :vote, :braidchain]
-    @info "Verifying API of the community module"
+    #@info "Verifying API of the community module"
     for method in api
         method in properties || @warn "$method is not part of $m."
     end
