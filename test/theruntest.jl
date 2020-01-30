@@ -31,7 +31,7 @@ import PeaceFounder
 maintainer = PeaceVote.Signer(uuid,"maintainer")
 server = PeaceVote.Signer(uuid,"server")
 
-ballotconfig = Community.BallotConfig(2000,2001,3,server.id,server.id) # self referencing
+ballotconfig = Community.BallotConfig(2000,2001,3,server.id,(uuid,server.id)) # self referencing
 braidchainconfig = PeaceFounder.BraidChainConfig(maintainer.id,maintainer.id,2002,2003,ballotconfig)
 systemconfig = Community.SystemConfig(2001,braidchainconfig)
 
