@@ -18,12 +18,9 @@ struct Vote
     msg 
 end
 
-
 abstract type AbstractOption end
 
 abstract type AbstractProposal end
-
-
 
 struct Proposal <: AbstractProposal
     uuid ### just so one could find it

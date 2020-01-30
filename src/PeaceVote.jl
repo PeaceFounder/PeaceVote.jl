@@ -37,15 +37,17 @@ function communityinfo(m::Module)
     end
 end
 
-
+function community(name::Symbol; info=true) ### I could write a test for this one.
+    community = Base.eval(NAMESPACE,name)
+    info && communityinfo(community)
+    return community
+end
 
 function community(uuid::UUID; info=true)
     ctx = Context()
     @assert uuid in ctx.env.manifest.keys "The community module is not imported in $NAMESPACE"
     name = Symbol(ctx.env.manifest[uuid].name)
-    community = Base.eval(NAMESPACE,name)
-    info && communityinfo(community)
-    return community
+    return community(name, info)
 end
 
 function uuid(name::AbstractString)
