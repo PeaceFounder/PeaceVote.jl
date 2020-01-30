@@ -47,7 +47,7 @@ function community(uuid::UUID; info=true)
     ctx = Context()
     @assert uuid in ctx.env.manifest.keys "The community module is not imported in $NAMESPACE"
     name = Symbol(ctx.env.manifest[uuid].name)
-    return community(name, info)
+    return community(name; info=info)
 end
 
 function uuid(name::AbstractString)
