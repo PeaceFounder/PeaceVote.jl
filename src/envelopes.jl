@@ -13,7 +13,7 @@ Verifies that the signature and calculates id of the public key.
 function unwrap(envelope::AbstractEnvelope)
     c = community(envelope.uuid) ### perhaps community() function would be the thing I need
     if c.verify(envelope.data,envelope.signature)
-        return envelope.data, c.id(envelope.signature)::Integer
+        return envelope.data, (envelope.uuid, c.id(envelope.signature)::Integer)
     else
         return envelope.data, nothing
     end
