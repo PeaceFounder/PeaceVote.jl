@@ -24,7 +24,7 @@ abstract type AbstractProposal end
 
 struct Proposal <: AbstractProposal
     uuid ### just so one could find it
-    id ### the person issueing the ceritificate
+    id ### the person issueing the proposal
     msg
     options### just a list of messages
 end
