@@ -29,6 +29,12 @@ struct Proposal <: AbstractProposal
     options### just a list of messages
 end
 
+import Base.==
+function ==(a::Proposal,b::Proposal)
+    a.uuid==b.uuid && a.id==b.id && a.msg==b.msg && a.options==b.options
+end
+
+
 struct Option <: AbstractOption
     pid ### the id of the proposal
     vote ### just a number or perhaps other choice
@@ -36,18 +42,24 @@ end
 
 Option(p::Proposal,choice) =  Option(p.uuid,choice)
 
-function voters!(voters::Set,braid::Braid)
+function addvoters!(voters::Set,braid::Braid)
     for i in braid.input
         @assert i in voters
     end
     
+    for o in braid.output
+        push!(voters,o)
+    end
+end
+
+
+function voters!(voters::Set,braid::Braid)
+    addvoters!(voters,braid)
+
     for i in braid.input
         pop!(voters,i)
     end
 
-    for o in braid.output
-        push!(voters,o)
-    end
 end
 
 function voters!(voters::Set,messages::Vector)
@@ -56,8 +68,8 @@ function voters!(voters::Set,messages::Vector)
             push!(voters,msg.id)
         elseif typeof(msg) == Braid
             voters!(voters,msg)
-        elseif typeof(msg) == Vote
-            @assert msg.id in voters "Vote with $(msg.uuid) is invalid."
+        #elseif typeof(msg) == Vote
+            #@assert msg.id in voters "Vote with $(msg.uuid) is invalid."
         end
     end
 end
@@ -83,6 +95,21 @@ function child(id,braids::Vector{Braid})
         end
     end
 end
+
+
+proposals(messages::Vector) = filter(msg -> typeof(msg)==Proposal,messages)
+votes(messages::Vector) = filter(msg -> typeof(msg)==Vote,messages)
+tickets(messages::Vector) = filter(msg -> typeof(msg)==Ticket,messages)
+
+
+function voters(proposal::Proposal,messages) 
+    index = findfirst(item -> item==proposal,messages)
+    vset = Set()
+    voters!(vset,messages[1:index])
+    return vset
+end
+
+
 
 #export voters!, Braid, Vote, Ticket
 

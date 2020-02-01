@@ -1,4 +1,5 @@
 using PeaceVote
+using PeaceVote: Vote, Option
 
 setnamespace(@__MODULE__)
 
@@ -32,7 +33,7 @@ maintainer = PeaceVote.Signer(uuid,"maintainer")
 server = PeaceVote.Signer(uuid,"server")
 
 ballotconfig = Community.BallotConfig(2000,2001,3,server.id,(uuid,server.id)) # self referencing
-braidchainconfig = PeaceFounder.BraidChainConfig([(uuid,maintainer.id)],maintainer.id,2002,2003,ballotconfig)
+braidchainconfig = PeaceFounder.BraidChainConfig([(uuid,maintainer.id)],maintainer.id,2002,2003,2004,ballotconfig)
 systemconfig = Community.SystemConfig(2001,braidchainconfig)
 
 community(uuid).save(systemconfig) # Only necessary for testing.
@@ -56,16 +57,61 @@ end
     @async begin
         account = "account$i"
         member = PeaceVote.Member(uuid,account)
-        voter = PeaceVote.Voter(uuid,account)
+        keychain = PeaceVote.KeyChain(uuid,account)
+        #voter = PeaceVote.Voter(uuid,account)
         
         commod = community(uuid)
         commod.register(cert)
-        commod.braid(voter,member)
-        
-        sleep(1) # voter coould wait until he obtains the ledger from the server. 
-        commod.vote("Count me in!",voter)
     end
 end
+
+
+@sync for i in 1:3
+    @async begin
+        account = "account$i"
+        keychain = PeaceVote.KeyChain(uuid,account)
+        PeaceVote.braid!(keychain)
+    end
+end
+
+# Someone puts a proposal
+pmember = PeaceVote.Member(uuid,"account2")
+commod = community(uuid)
+commod.propose("Found peace for a change?",["yes","no","maybe"],pmember);
+
+
+@sync for i in 1:3
+    @async begin
+        account = "account$i"
+        keychain = PeaceVote.KeyChain(uuid,account)
+        PeaceVote.braid!(keychain)
+    end
+end
+
+pmember = PeaceVote.Member(uuid,"account1")
+commod = community(uuid)
+commod.propose("Democracy for everyone?",["yes","no"],pmember);
+
+sleep(1)
+
+messages = commod.braidchain()
+proposals = PeaceVote.proposals(messages)
+
+@sync for i in 1:3
+    @async begin
+        account = "account$i"
+        keychain = PeaceVote.KeyChain(uuid,account)
+        
+        voter = PeaceVote.Voter(keychain,proposals[1],messages)
+        option = PeaceVote.Option(proposals[1],rand(1:3))
+        commod.vote(option,voter)
+
+        voter = PeaceVote.Voter(keychain,proposals[2],messages)
+        option = PeaceVote.Option(proposals[2],rand(1:2))
+        commod.vote(option,voter)
+    end
+end
+
 
 ### Methods for analyzing the braidchain. 
 
@@ -74,3 +120,8 @@ sleep(1)
 commod = community(uuid)
 members = commod.members()
 braidchain = commod.braidchain()
+
+for proposal in PeaceVote.proposals(braidchain)
+    tally = commod.count(proposal,braidchain)
+    @show proposal,tally
+end

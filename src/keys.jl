@@ -1,6 +1,5 @@
 ### This file contains all functions which are necessary for accessing .peacevote/keys folder. In future it would be great to have a password prtotection so one could do easier backups.
 
-
 abstract type AbstractSigner end
 
 function save(s,fname) 
@@ -32,52 +31,69 @@ end
 
 Signer(uuid::UUID,account) = Signer(uuid,community(uuid),account)
 
-#Server(uuid::UUID) = Signer(uuid,"server")
-#Maintainer(uuid::UUID) = Signer(uuid,"maintainer")
-
 Member(uuid::UUID,account) = Signer(uuid,account * "/member")
 Member(uuid::UUID) = Member(uuid,"")
 
+Voter(uuid::UUID,idx,account) = Signer(uuid,account * "/voters/$idx")
+Voter(uuid::UUID,idx) = Voter(uuid,idx,"")
 
 ### The KeyChain part. 
 
-struct Voter <: AbstractSigner
+struct KeyChain <: AbstractSigner
     uuid::UUID
-    id
-    sign::Function
+    account
+    member::Signer
+    signers::Vector{Signer}
 end
 
-function getnewestvoter(uuid::UUID,account)
-    dir = keydir(uuid) * account 
-    
-    t = 0
-    fname = nothing
-    for file in readdir(dir)
-        if split(file,"-")[1]=="voter" && t<mtime("$dir/$file")
-            fname = file
+function KeyChain(uuid::UUID,account)
+    member = Member(uuid,account)
+
+    voterdir = keydir(uuid) * account * "/voters/"
+    mkpath(voterdir)
+
+    t = []
+    voters = Signer[]
+    for file in readdir(voterdir)
+        voter = Voter(uuid,file,account)
+        push!(t,mtime("$voterdir/$file"))
+        push!(voters,voter)
+    end
+
+    if length(voters) > 0 
+        voters=voters[sortperm(t)]
+    end
+
+    return KeyChain(uuid,account,member,voters)
+end
+
+KeyChain(uuid::UUID) = KeyChain(uuid,"")
+
+### I could use oldvoter.id as filename
+function braid!(kc::KeyChain,braid::Function,community::Module)
+    if length(kc.signers)==0 
+        oldvoter = kc.member
+    else
+        oldvoter = kc.signers[end]
+    end
+
+    newvoter = Signer(kc.uuid,community,kc.account * "/voters/$(oldvoter.id)")
+
+    braid(newvoter,oldvoter)
+    # if fails, delete the newvoter
+    push!(kc.signers,newvoter)
+end
+
+braid!(kc::KeyChain,braid::Function) = braid!(kc,braid,community(kc.uuid))
+braid!(kc::KeyChain) = braid!(kc,community(kc.uuid).braid)
+
+function Voter(kc::KeyChain,proposal::Proposal,braidchain)
+    vset = voters(proposal,braidchain)
+    for voter in kc.signers 
+        if voter.id in vset
+            return voter
         end
     end
-
-    return fname
 end
 
-function Voter(uuid::UUID,community::Module,account; new=false)
-
-    fname = getnewestvoter(uuid,account)
-    if fname==nothing || new==true
-        @info "Creating a new voter for the community"
-        
-        s = community.Signer()
-        id = community.id(s)
-        save(s,keydir(uuid) * account * "/voter-$id")
-    end
-    
-    fname = getnewestvoter(uuid,account)
-    signer = deserialize(keydir(uuid) * account * "/$fname")
-    sign(data) = community.Signature(data,signer)
-
-    return Voter(uuid,community.id(signer),sign)
-end
-
-Voter(uuid::UUID,account;new=false) = Voter(uuid,community(uuid),account,new=new)
-Voter(uuid::UUID; new=false) = Voter(uuid,"",new=new)
+Voter(kc::KeyChain,proposal::Proposal) = Voter(kc,proposal,community(kc.uuid).braidchain())

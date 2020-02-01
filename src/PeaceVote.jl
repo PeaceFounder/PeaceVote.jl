@@ -55,9 +55,10 @@ function uuid(name::AbstractString)
     return ctx.env.project.deps[name]
 end
 
+include("braidchain.jl")
 include("keys.jl")
 include("envelopes.jl")
-include("braidchain.jl")
+
 
 export community, setnamespace
 
