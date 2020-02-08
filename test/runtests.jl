@@ -2,4 +2,4 @@
 
 using PeaceVote
 
-#include("theruntest.jl")
+include("theruntest.jl")
