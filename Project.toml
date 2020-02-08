@@ -9,3 +9,9 @@ Serialization = "9e88b42a-f829-5b0c-bbe9-9e923198166b"
 
 [compat]
 julia = "1"
+
+[extras]
+PeaceFounder = "916f7771-afe2-4319-943d-0e770c333432"
+
+[targets]
+test = ["PeaceFounder"]

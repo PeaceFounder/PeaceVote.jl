@@ -102,11 +102,64 @@ votes(messages::Vector) = filter(msg -> typeof(msg)==Vote,messages)
 tickets(messages::Vector) = filter(msg -> typeof(msg)==Ticket,messages)
 
 
-function voters(proposal::Proposal,messages) 
+#function voters(proposal::Proposal,messages) 
+function voters(messages,proposal::Proposal)
     index = findfirst(item -> item==proposal,messages)
     vset = Set()
     voters!(vset,messages[1:index])
     return vset
+end
+
+function voters(messages,option::Option)
+    index = findfirst(x -> typeof(x)==Proposal && x.uuid==option.pid,messages)
+    vset = Set()
+    voters!(vset,messages[1:index])
+    return vset
+end
+
+function voters(braidchain)
+    vset = Set()
+    voters!(vset,braidchain)
+    return vset
+end
+
+function members(braidchain)
+    mset = Set()
+    for msg in braidchain
+        if typeof(msg) == Ticket
+            push!(mset,msg.id)
+        end
+    end
+    return mset
+end
+
+function allvoters(braidchain)
+    vset = Set()
+    for msg in braidchain
+        if typeof(msg) == Ticket
+            push!(vset,msg.id)
+        elseif typeof(msg) == Braid
+            addvoters!(vset,msg)
+        end
+    end
+
+    return vset
+end
+
+function count(uuid::UUID, proposal::Proposal, braidchain)
+    com = community(uuid)
+    return com.count(proposal,braidchain)
+end
+
+
+function sync(uuid::UUID)
+    com = community(uuid)
+    com.sync()
+end
+
+function braidchain(uuid::UUID)
+    com = community(uuid)
+    com.braidchain()
 end
 
 

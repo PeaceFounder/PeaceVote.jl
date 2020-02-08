@@ -20,16 +20,16 @@ More specifically, I propose to fix the definitions for anonymity, transparency 
 ### Security:
 
 + Legitimacy. All participating members are real and verified. 
-+ Accountable. Misbehaving individuals can be isolated. 
-+ The publically available data can not be tampered with to change the election outcome. (cryptographically secure)
++ Accountabilty. Misbehaving individuals can be isolated. 
++ Tamper resitant. The publically available data can not be tampered with to change the election outcome. (cryptographically secure)
 + No single attackable entity (phone, server, cryptographic protocol, ....) which can significantly change the election outcome. (There is always a possibility of malware. I assume that it is a minority and the detection and prevention of that is the Vendor's responsibility whose reputation would be at stake.)
 
 ### Anonymity:
 
 + Privacy: Noone knows how you voted without your cooperation.
-+ Prooflessness: You can not prove how you voted for another person, even with your cooperation, also known as receipt freeness and secret ballot. I don't use those definitions because the voting system can have a receipt, but it might not be the only one. 
++ Secrecy: You can not prove how you voted for another person, even with your cooperation, also known as receipt freeness and secret ballot. I don't use those definitions because the voting system can have a receipt, but it might not be the only one. The voter might have a secret!
 
-Prooflessness can be implemented with software by giving the citizen a choice to vote in a traditional voting ceremony which would override the online voting receipt while not revealing whether he/she did so to the public. In such a case, the system needs a trusted auditor who produces a compensated tally. It seems reasonable to assume that the secret ballot would be much smaller than a public (not open) ballot thus universal verifiability would still hold. However, before, that is reasonable to implement one needs to prevent such a simple thing as identity selling which one could achieve with hardware (see the PeaceCard project). 
+Secrecy can be implemented with software by giving the citizen a choice to vote in a traditional voting ceremony which would override the online voting receipt while not revealing whether he/she did so to the public. In such a case, the system needs a trusted auditor who produces a compensated tally. It seems reasonable to assume that the secret ballot would be much smaller than a public (not open) ballot thus universal verifiability would still hold approximatelly. However, before, that is reasonable to implement one needs to prevent such a simple thing as identity selling which one could achieve with hardware (see the PeaceCard project). 
 
 The focus thus for PeaceVote is voluntarily democracies. It is the democracies of communities where members get engaged by making a significant change in their surroundings and so would want to protect their democracy. The privacy would make decisions less group biased and more thoughtful by individuals themselves for the community. The democracy could also be a great tool to unite audiences of two opposing divisions of the society by giving them the ability to delegate representatives for a discussion.  The system is also useful for anonymous questionnaires where the minority members do not feel safe to be publically known. Or for whistleblowers who do feel that their integrity had been intact. The last part is essential to punish those members who are documented to sell their votes on the field or sell their representative power within the community. 
 
@@ -191,3 +191,5 @@ After I finalized the design and found it trustworthy from my perspective, I tri
 + https://en.wikipedia.org/wiki/Software_independence
 + https://en.bitcoin.it/wiki/CoinJoin
 + https://arxiv.org/pdf/1707.08619.pdf
++ https://usvotefoundation-drupal.s3.amazonaws.com/prod/E2EVIV_full_report.pdf
++ https://www.nap.edu/catalog/25120/securing-the-vote-protecting-american-democracy [section about blockchain]

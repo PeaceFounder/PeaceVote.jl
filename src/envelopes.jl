@@ -48,4 +48,11 @@ end
 Certificate(id::AbstractID,signer::AbstractSigner) = Certificate(signer.uuid,id,signer.sign(id))
 Certificate(str::AbstractString) = deserilize(IOBuffer(str))
 
+
+function register(uuid::UUID,certificate::Certificate)
+    com = community(uuid)
+    com.register(certificate)
+end
+
+
 #export Certificate, Envelope, unwrap

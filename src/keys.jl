@@ -87,8 +87,10 @@ end
 braid!(kc::KeyChain,braid::Function) = braid!(kc,braid,community(kc.uuid))
 braid!(kc::KeyChain) = braid!(kc,community(kc.uuid).braid)
 
-function Voter(kc::KeyChain,proposal::Proposal,braidchain)
-    vset = voters(proposal,braidchain)
+
+Voter(kc::KeyChain) = kc.signers[end]
+
+function Voter(kc::KeyChain,vset::Set,braidchain)
     for voter in kc.signers 
         if voter.id in vset
             return voter
@@ -96,4 +98,32 @@ function Voter(kc::KeyChain,proposal::Proposal,braidchain)
     end
 end
 
+Voter(kc::KeyChain,proposal::Proposal,braidchain) = Voter(kc,voters(braidchain,proposal),braidchain)
+Voter(kc::KeyChain,option::Option,braidchain) = Voter(kc,voters(braidchain,option),braidchain)
+
 Voter(kc::KeyChain,proposal::Proposal) = Voter(kc,proposal,community(kc.uuid).braidchain())
+Voter(kc::KeyChain,option::Option) = Voter(kc,option,community(kc.uuid).braidchain())
+
+function vote(option::Option,keychain::KeyChain,braidchain)
+    com = community(keychain.uuid)
+    voter = Voter(keychain,option,braidchain)
+    com.vote(option,voter)
+end
+
+vote(option::Option,keychain::KeyChain) = vote(option,keychain,community(keychain.uuid).braidchain())
+
+function propose(msg,options,member::Signer)
+    com = community(member.uuid)
+    com.propose(msg, options, member)
+end
+
+function propose(msg,options,keychain::KeyChain)
+    com = community(keychain.uuid)
+    com.propose(msg, options, keychain.member)
+end
+
+function whistle(msg, keychain)
+    com = community(keychain.uuid)
+    voter = Voter(keychain)
+    com.vote(msg, voter)
+end
