@@ -74,6 +74,7 @@ function voters!(voters::Set,messages::Vector)
     end
 end
 
+
 """
     Returns a parrent braid
 """
@@ -133,6 +134,17 @@ function members(braidchain)
     return mset
 end
 
+function members(braidchain,ca)
+    mset = Set()
+    for item in braidchain
+        if typeof(item)==Ticket
+            @assert (item.uuid,item.cid) in ca "certificate for $(item.id) is not valid"
+            push!(mset,item.id)
+        end
+    end
+    return mset
+end
+
 function allvoters(braidchain)
     vset = Set()
     for msg in braidchain
@@ -151,17 +163,22 @@ function count(uuid::UUID, proposal::Proposal, braidchain)
     return com.count(proposal,braidchain)
 end
 
-
-function sync(uuid::UUID)
+function Ledger(uuid::UUID)
     com = community(uuid)
-    com.sync()
+    return com.Ledger()
 end
 
-function braidchain(uuid::UUID)
+function sync!(ledger,uuid::UUID)
     com = community(uuid)
-    com.braidchain()
+    com.sync!(ledger)
 end
 
+function braidchain(ledger,uuid::UUID)
+    com = community(uuid)
+    return com.braidchain(ledger)
+end
+
+braidchain(uuid::UUID) = braidchain(Ledger(uuid),uuid)
 
 
 #export voters!, Braid, Vote, Ticket

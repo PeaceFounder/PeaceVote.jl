@@ -166,9 +166,10 @@ braidchain
 count
 
 # For participation
-Signer ### id could be extracted from wrap and unwrap which is also necessary for the testing
-wrap # Perhaps I could replace signature with this one
-unwrap
+Signer 
+Signature 
+verify ### verifies signature with respect to data
+id ### method for the Signer and for the Signature
 register
 braid
 vote
@@ -178,7 +179,7 @@ G
 SecureSocket
 hash
 ```
-Currently, there exists methods `Signature`, `id`, `verify` which I plan to factor out of the PeaceVote soon.
+Currently `id` and `verify` appears at very much at the same places. In future `id` will be deprecated in favour of `verify` which returns `id` if signature is valid and `nothing` otherwise.
 
 For an example of the community see `Community.jl`, and for convenience, methods see `PeaceFounder.jl` package. But mainly it is up to you to build the voting tool you need for the community whereas PeaceVote helps your community to be more accessible, distributed and transparent.
 

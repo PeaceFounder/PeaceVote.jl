@@ -21,9 +21,9 @@ end
 
 # Some basics
 
-server = PeaceVote.Signer(uuid,"server")
-signature = server.sign("hello world")
-community(uuid).verify(signature)
+#server = PeaceVote.Signer(uuid,"server")
+#signature = server.sign("hello world") # wrap and unwrap test here
+#community(uuid).verify(signature)
 
 # Start a community server. 
 import PeaceFounder
