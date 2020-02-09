@@ -19,12 +19,6 @@ for dir in dirs
     isdir(dir) && rm(dir,recursive=true)
 end
 
-# Some basics
-
-#server = PeaceVote.Signer(uuid,"server")
-#signature = server.sign("hello world") # wrap and unwrap test here
-#community(uuid).verify(signature)
-
 # Start a community server. 
 import PeaceFounder
 
@@ -33,7 +27,7 @@ server = PeaceVote.Signer(uuid,"server")
 
 ballotconfig = Community.BallotConfig(2000,2001,3,server.id,(uuid,server.id)) # self referencing
 braidchainconfig = PeaceFounder.BraidChainConfig([(uuid,maintainer.id)],maintainer.id,2002,2003,2004,ballotconfig)
-systemconfig = Community.SystemConfig(2001,braidchainconfig)
+systemconfig = Community.SystemConfig(2001,2005,braidchainconfig)
 
 Community.save(systemconfig) # Only necessary for testing.
 
