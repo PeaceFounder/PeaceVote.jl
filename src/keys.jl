@@ -1,6 +1,6 @@
 ### This file contains all functions which are necessary for accessing .peacevote/keys folder. In future it would be great to have a password prtotection so one could do easier backups.
 
-abstract type AbstractSigner end
+using Serialization: serialize, deserialize
 
 function save(s,fname) 
     mkpath(dirname(fname))
@@ -14,48 +14,47 @@ struct Signer <: AbstractSigner
     sign::Function
 end
 
-function Signer(uuid::UUID,community::Module,account)
-    fname = keydir(uuid) * account 
+function Signer(deme::Deme,account)
+    fname = keydir(deme.spec.uuid) * account 
     
     if !isfile(fname)
         @info "Creating a new signer for the community"
-        s = community.Signer()
+        
+        s = deme.notary.Signer()
         save(s,fname)
     end
     
     signer = deserialize(fname)
-    sign(data) = community.Signature(data,signer)
+    sign(data) = deme.notary.Signature(data,signer)
 
-    return Signer(uuid,community.id(signer),sign)
+    test = "A test message."
+    signature = sign(test)
+    id = deme.notary.verify(test,signature)
+
+    @assert id!=nothing
+
+    return Signer(deme.spec.uuid,id,sign)
 end
-
-Signer(uuid::UUID,account) = Signer(uuid,community(uuid),account)
-
-Member(uuid::UUID,account) = Signer(uuid,account * "/member")
-Member(uuid::UUID) = Member(uuid,"")
-
-Voter(uuid::UUID,idx,account) = Signer(uuid,account * "/voters/$idx")
-Voter(uuid::UUID,idx) = Voter(uuid,idx,"")
 
 ### The KeyChain part. 
 
 struct KeyChain <: AbstractSigner
-    uuid::UUID
+    deme::Deme ### This is necessary to make braid! function obvious  
     account
     member::Signer
     signers::Vector{Signer}
 end
 
-function KeyChain(uuid::UUID,account)
-    member = Member(uuid,account)
+function KeyChain(deme::Deme,account)
+    member = Signer(deme,account * "/member")
 
-    voterdir = keydir(uuid) * account * "/voters/"
+    voterdir = keydir(deme.spec.uuid) * account * "/voters/"
     mkpath(voterdir)
 
     t = []
     voters = Signer[]
     for file in readdir(voterdir)
-        voter = Voter(uuid,file,account)
+        voter = Signer(deme,account * "/voters/$file")
         push!(t,mtime("$voterdir/$file"))
         push!(voters,voter)
     end
@@ -67,63 +66,51 @@ function KeyChain(uuid::UUID,account)
     return KeyChain(uuid,account,member,voters)
 end
 
-KeyChain(uuid::UUID) = KeyChain(uuid,"")
+KeyChain(deme::Deme) = KeyChain(deme,"")
 
 ### I could use oldvoter.id as filename
-function braid!(kc::KeyChain,braid::Function,community::Module)
+function braid!(kc::KeyChain)
     if length(kc.signers)==0 
         oldvoter = kc.member
     else
         oldvoter = kc.signers[end]
     end
 
-    newvoter = Signer(kc.uuid,community,kc.account * "/voters/$(oldvoter.id)")
+    newvoter = Signer(kc.deme,kc.account * "/voters/$(oldvoter.id)")
 
-    braid(newvoter,oldvoter)
+    braid(kc.deme,newvoter,oldvoter)
     # if fails, delete the newvoter
     push!(kc.signers,newvoter)
 end
 
-braid!(kc::KeyChain,braid::Function) = braid!(kc,braid,community(kc.uuid))
-braid!(kc::KeyChain) = braid!(kc,community(kc.uuid).braid)
+voter(kc::KeyChain) = kc.signers[end]
 
-
-Voter(kc::KeyChain) = kc.signers[end]
-
-function Voter(kc::KeyChain,vset::Set,braidchain)
-    for voter in kc.signers 
-        if voter.id in vset
-            return voter
+function voter(kc::KeyChain,vset::Set,bc)
+    for v in kc.signers 
+        if v.id in vset
+            return v
         end
     end
 end
 
-Voter(kc::KeyChain,proposal::Proposal,braidchain) = Voter(kc,voters(braidchain,proposal),braidchain)
-Voter(kc::KeyChain,option::Option,braidchain) = Voter(kc,voters(braidchain,option),braidchain)
+function voter(kc::KeyChain,x::Union{Proposal,Option}) 
+    bc = braidchain(kc.deme)
+    voter(kc,voters(bc,x),bc)
+end    
 
-Voter(kc::KeyChain,proposal::Proposal) = Voter(kc,proposal,community(kc.uuid).braidchain())
-Voter(kc::KeyChain,option::Option) = Voter(kc,option,community(kc.uuid).braidchain())
+voter(kc::KeyChain,vset::Set) = voter(kc,vset,braidchain(kc.deme))
 
-function vote(option::Option,keychain::KeyChain,braidchain)
-    com = community(keychain.uuid)
-    voter = Voter(keychain,option,braidchain)
-    com.vote(option,voter)
+function vote(option::AbstractOption,keychain::KeyChain)
+    v = voter(keychain,option)
+    vote(keychain.deme,option,v)
 end
 
-vote(option::Option,keychain::KeyChain) = vote(option,keychain,community(keychain.uuid).braidchain())
 
 function propose(msg,options,member::Signer)
     com = community(member.uuid)
     com.propose(msg, options, member)
 end
 
-function propose(msg,options,keychain::KeyChain)
-    com = community(keychain.uuid)
-    com.propose(msg, options, keychain.member)
-end
+propose(proposal::AbstractProposal,kc::KeyChain) = propose(kc.deme, proposal, kc.member)
 
-function whistle(msg, keychain)
-    com = community(keychain.uuid)
-    voter = Voter(keychain)
-    com.vote(msg, voter)
-end
+#whistle(msg,keychain) = vote(msg,keychain)

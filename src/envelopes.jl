@@ -1,4 +1,3 @@
-abstract type AbstractEnvelope end
 
 import Base.String
 function String(envelope::AbstractEnvelope)
@@ -31,7 +30,6 @@ Envelope(str::AbstractString) = deserilize(IOBuffer(str))
 
 ### The Certificates
 
-abstract type AbstractID end
 
 struct ID <: AbstractID
     name
@@ -41,7 +39,7 @@ end
 
 # Certificate could also be made as Envelope{ID}. 
 struct Certificate <: AbstractEnvelope
-    uuid::UUID
+    uuid::UUID ### Now it is the deme
     data::AbstractID
     signature#::AbstractSignature
 end
@@ -50,10 +48,10 @@ Certificate(id::AbstractID,signer::AbstractSigner) = Certificate(signer.uuid,id,
 Certificate(str::AbstractString) = deserilize(IOBuffer(str))
 
 
-function register(uuid::UUID,certificate::Certificate)
-    com = community(uuid)
-    com.register(certificate)
-end
+# function register(uuid::UUID,certificate::Certificate)
+#     com = community(uuid)
+#     com.register(certificate)
+# end
 
 
 #export Certificate, Envelope, unwrap
