@@ -1,23 +1,25 @@
+# import Base.String
+# function String(envelope::AbstractEnvelope)
+#     io = IOBuffer()
+#     serialize(io,envelope)
+#     String(take!(io))
+# end
 
-import Base.String
-function String(envelope::AbstractEnvelope)
-    io = IOBuffer()
-    serialize(io,envelope)
-    String(take!(io))
-end
 
 """
 Verifies that the signature and calculates id of the public key.
 """
-function unwrap(envelope::AbstractEnvelope)
-    c = community(envelope.uuid) ### perhaps community() function would be the thing I need
-    
-    if c.verify(envelope.data,envelope.signature)
-        return envelope.data, (envelope.uuid, c.id(envelope.signature)::Integer)
-    else
-        return envelope.data, nothing
-    end
+function unwrap(envelope::AbstractEnvelope,notary::Notary)
+    id = notary.verify("$(envelope.data)",envelope.signature)
+    return envelope.data, id
 end
+
+function unwrap(envelope::AbstractEnvelope)
+    demespec = DemeSpec(envelope.uuid)
+    notary = Notary(demespec)
+    return unwrap(envelope,notary)
+end
+    
 
 struct Envelope <: AbstractEnvelope
     uuid::UUID
@@ -44,8 +46,9 @@ struct Certificate <: AbstractEnvelope
     signature#::AbstractSignature
 end
 
-Certificate(id::AbstractID,signer::AbstractSigner) = Certificate(signer.uuid,id,signer.sign(id))
-Certificate(str::AbstractString) = deserilize(IOBuffer(str))
+
+Certificate(id::AbstractID,signer::AbstractSigner) = Certificate(signer.uuid,id,signer.sign("$id"))
+Certificate(str::AbstractString) = deserilize(IOBuffer(str)) # We could do a little better here
 
 
 # function register(uuid::UUID,certificate::Certificate)

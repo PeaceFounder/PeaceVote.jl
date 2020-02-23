@@ -2,7 +2,7 @@
 
 using Serialization: serialize, deserialize
 
-function save(s,fname) 
+function _save(s,fname) 
     mkpath(dirname(fname))
     serialize(fname,s)
 end
@@ -14,27 +14,28 @@ struct Signer <: AbstractSigner
     sign::Function
 end
 
-function Signer(deme::Deme,account)
-    fname = keydir(deme.spec.uuid) * account 
+function Signer(uuid::UUID,notary::Notary,account::AbstractString)
+    fname = keydir(uuid) * account 
     
     if !isfile(fname)
         @info "Creating a new signer for the community"
-        
-        s = deme.notary.Signer()
-        save(s,fname)
+        s = notary.Signer()
+        _save(s,fname)
     end
     
     signer = deserialize(fname)
-    sign(data) = deme.notary.Signature(data,signer)
+    sign(data) = notary.Signature(data,signer)
 
     test = "A test message."
     signature = sign(test)
-    id = deme.notary.verify(test,signature)
+    id = notary.verify(test,signature)
 
     @assert id!=nothing
 
-    return Signer(deme.spec.uuid,id,sign)
+    return Signer(uuid,id,sign)
 end
+
+Signer(deme::Deme,account::AbstractString) = Signer(deme.spec.uuid,deme.notary,account)
 
 ### The KeyChain part. 
 
@@ -45,16 +46,18 @@ struct KeyChain <: AbstractSigner
     signers::Vector{Signer}
 end
 
-function KeyChain(deme::Deme,account)
-    member = Signer(deme,account * "/member")
+function KeyChain(deme::Deme,account::AbstractString)
+    uuid = deme.spec.uuid
+    notary = deme.notary
 
-    voterdir = keydir(deme.spec.uuid) * account * "/voters/"
+    member = Signer(uuid,notary,account * "/member")
+    voterdir = keydir(uuid) * account * "/voters/"
     mkpath(voterdir)
 
     t = []
     voters = Signer[]
     for file in readdir(voterdir)
-        voter = Signer(deme,account * "/voters/$file")
+        voter = Signer(uuid,notary,account * "/voters/$file")
         push!(t,mtime("$voterdir/$file"))
         push!(voters,voter)
     end
@@ -63,9 +66,10 @@ function KeyChain(deme::Deme,account)
         voters=voters[sortperm(t)]
     end
 
-    return KeyChain(uuid,account,member,voters)
+    return KeyChain(deme,account,member,voters)
 end
 
+#KeyChain(deme::Deme,account::AbstractString) = KeyChain(deme.spec.uuid,deme.notary,account)
 KeyChain(deme::Deme) = KeyChain(deme,"")
 
 ### I could use oldvoter.id as filename
@@ -78,7 +82,7 @@ function braid!(kc::KeyChain)
 
     newvoter = Signer(kc.deme,kc.account * "/voters/$(oldvoter.id)")
 
-    braid(kc.deme,newvoter,oldvoter)
+    braid!(kc.deme,newvoter,oldvoter)
     # if fails, delete the newvoter
     push!(kc.signers,newvoter)
 end
