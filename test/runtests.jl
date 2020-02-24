@@ -13,10 +13,12 @@ verify(data,signature) = CryptoSignatures.verify(signature,G) && hash(data)==sig
 (Signer,Signature,verify,hash)
 end
 
+
+
 deps = Symbol[:Nettle,:CryptoGroups,:CryptoSignatures]
 
-notary = PeaceVote.Notary(crypto,deps)
-demespec = PeaceVote.DemeSpec(name,crypto,deps,:PeaceVote,notary)
+#notary = PeaceVote.Notary(crypto,deps)
+demespec = PeaceVote.DemeSpec(name,crypto,deps,:PeaceVote)
 
 # Now some testing 
 

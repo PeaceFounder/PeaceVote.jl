@@ -51,6 +51,8 @@ end
 
 ### importdeps could be also used for the present namespace!!!
 
+import Base.invokelatest
+
 function Notary(crypto::Expr,deps::Vector{UUID})
     ### A command like importdeps would be a nice name
     importdeps(SandBox,deps)
@@ -61,7 +63,11 @@ function Notary(crypto::Expr,deps::Vector{UUID})
         end
     end
     spec = Base.eval(SandBox,expr)
-    return Notary(spec...)
+    speclatest = Function[(args...) -> invokelatest(speci, args...) for speci in spec]
+
+    #spec = @eval SandBox $expr
+    #return Notary(spec...)
+    return Notary(speclatest...)
 end
 
 Notary(metadata::DemeSpec) = Notary(metadata.crypto,metadata.deps)
