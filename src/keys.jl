@@ -35,7 +35,15 @@ function Signer(uuid::UUID,notary::Notary,account::AbstractString)
     return Signer(uuid,id,sign)
 end
 
+Signer(uuid::UUID,notary::New{Notary},account::AbstractString) = New(invokelatest(notary->Signer(uuid,notary,account),notary.invoke)::Signer)
+
 Signer(deme::Deme,account::AbstractString) = Signer(deme.spec.uuid,deme.notary,account)
+Signer(deme::New{Deme{T}},account::AbstractString) where T = New(Signer(deme.invoke.spec.uuid,deme.invoke.notary,account))
+
+
+sign(data::AbstractString,signer::Signer) = signer.sign(data)
+
+
 
 ### The KeyChain part. 
 
@@ -69,8 +77,10 @@ function KeyChain(deme::Deme,account::AbstractString)
     return KeyChain(deme,account,member,voters)
 end
 
+KeyChain(deme::New{Deme},account::AbstractString) = New(invokelatest(deme->KeyChain(deme,account),deme.invoke)::KeyChain)
+
 #KeyChain(deme::Deme,account::AbstractString) = KeyChain(deme.spec.uuid,deme.notary,account)
-KeyChain(deme::Deme) = KeyChain(deme,"")
+KeyChain(deme::Union{Deme,New{Deme}}) = KeyChain(deme,"")
 
 ### I could use oldvoter.id as filename
 function braid!(kc::KeyChain)
@@ -86,6 +96,8 @@ function braid!(kc::KeyChain)
     # if fails, delete the newvoter
     push!(kc.signers,newvoter)
 end
+
+braid!(kc::New{KeyChain}) = invokelatest(kc->braid!(kc),kc.invoke)
 
 voter(kc::KeyChain) = kc.signers[end]
 
@@ -109,6 +121,7 @@ function vote(option::AbstractOption,keychain::KeyChain)
     vote(keychain.deme,option,v)
 end
 
+vote(option::AbstractOption,keychain::New{KeyChain}) = invokelatest(kc->vote(option,kc),keychain.invoke)
 
 function propose(msg,options,member::Signer)
     com = community(member.uuid)
@@ -116,5 +129,6 @@ function propose(msg,options,member::Signer)
 end
 
 propose(proposal::AbstractProposal,kc::KeyChain) = propose(kc.deme, proposal, kc.member)
+propose(proposal::AbstractProposal,kc::New{KeyChain}) = invokelatest(kc->propose(proposal,kc),kc.invoke)
 
 #whistle(msg,keychain) = vote(msg,keychain)

@@ -20,12 +20,13 @@ deps = Symbol[:Nettle,:CryptoGroups,:CryptoSignatures]
 #notary = PeaceVote.Notary(crypto,deps)
 demespec = PeaceVote.DemeSpec(name,crypto,deps,:PeaceVote)
 
+
 # Now some testing 
 
 deme = Deme(demespec,nothing)
 maintainer = PeaceVote.Signer(deme,"maintainer")
 
-notary = deme.notary
+notary = deme.invoke.notary
 
 signer = notary.Signer()
 msg = "Hello World"

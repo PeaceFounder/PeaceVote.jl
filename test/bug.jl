@@ -15,9 +15,6 @@ end
 
 deps = Symbol[:Nettle,:CryptoGroups,:CryptoSignatures]
 
-
-notaries = Dict()
-
 ### So this thing works:
 
 notary = PeaceVote.Notary(crypto,deps)
@@ -28,9 +25,9 @@ demespec = PeaceVote.DemeSpec(name,crypto,deps,:PeaceVote,notary)
 function demespecf(name,crypto,deps,peacefounder)
 
     notary = PeaceVote.Notary(crypto,deps)
-    notaries[name] = notary
-
-    demespec = PeaceVote.DemeSpec(name,crypto,deps,:PeaceVote,notaries[name])
+    
+    d(notary) = PeaceVote.DemeSpec(name,crypto,deps,:PeaceVote,notary)
+    demespec = Base.invokelatest(d,notary)
     
     return demespec
 end

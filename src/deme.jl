@@ -13,7 +13,6 @@ uuid(ctx::Context,name::Module) = uuid(ctx,nameof(name))
 
 uuid(name::Union{Module,Symbol,AbstractString}) = uuid(Context(),name)
 
-
 function add(spec::DemeSpec)
     error("Not implemented")
 end
@@ -62,18 +61,25 @@ function Notary(crypto::Expr,deps::Vector{UUID})
             $crypto
         end
     end
+
     spec = Base.eval(SandBox,expr)
-    speclatest = Function[(args...) -> invokelatest(speci, args...) for speci in spec]
 
-    #spec = @eval SandBox $expr
-    #return Notary(spec...)
-    return Notary(speclatest...)
+    return New(Notary(spec...))
+    #speclatest = Function[(args...) -> invokelatest(speci, args...) for speci in spec]
+    #return Notary(speclatest...)
 end
-
-Notary(metadata::DemeSpec) = Notary(metadata.crypto,metadata.deps)
 
 Notary(crypto::Expr,deps::Vector{Symbol}) = Notary(crypto,UUID[uuid(dep) for dep in deps])
 
+### In future there could be a standart for cryptographic methods which would not require to use eval. Thus knowing in advance whether demespec would need eval is not possible. It is quite simply dynamic.
+Notary(metadata::DemeSpec) = Notary(metadata.crypto,metadata.deps)
+
+
+verify(data::AbstractString,signature,notary::Notary) = notary.verify(data,signature)
+verify(data::AbstractString,signature,notary::New{Notary}) = invokelatest(notary->verify(data,signature,notary),notary.invoke)
+
+hash(data::AbstractString,notary::Notary) = notary.hash(data)
+hash(data::AbstractString,notary::New{Notary}) = invokelatest(notary->hash(data,notary),notary.invoke)
 
 
 function DemeSpec(name::AbstractString,crypto::Expr,deps::Vector{Symbol},peacefounder::Symbol,notary::Notary)
@@ -86,13 +92,10 @@ function DemeSpec(name::AbstractString,crypto::Expr,deps::Vector{Symbol},peacefo
     DemeSpec(demeuuid,name,maintainer.id,crypto,deps_uuid,peacefounder_uuid)
 end
 
+DemeSpec(name::AbstractString,crypto::Expr,deps::Vector{Symbol},peacefounder::Symbol,notary::New{Notary}) = invokelatest(notary -> DemeSpec(name,crypto,deps,peacefounder,notary),notary.invoke)::DemeSpec
+
 ### This one does not work. Why?
-function DemeSpec(name::AbstractString,crypto::Expr,deps::Vector{Symbol},peacefounder::Symbol)
-    notary = Notary(crypto,deps)
-    DemeSpec(name,crypto,deps,peacefounder,notary)
-end
-
-
+DemeSpec(name::AbstractString,crypto::Expr,deps::Vector{Symbol},peacefounder::Symbol) = DemeSpec(name,crypto,deps,peacefounder,Notary(crypto,deps))
 
 
 DemeType(uuid::UUID) = Deme{uuid.value}
@@ -107,7 +110,11 @@ function Deme(spec::DemeSpec,notary::Notary,port)
     end
     ThisDeme(spec,notary,ledger)
 end
+
+Deme(spec::DemeSpec,notary::New{Notary},port) = New(Deme(spec,notary.invoke,port))
+
 Deme(spec::DemeSpec,port) = Deme(spec,Notary(spec),port)
+Deme(uuid::UUID,port) = Deme(DemeSpec(uuid),port)
 
 ### In this way the working namespace would not need to know anything about DemeType. 
 

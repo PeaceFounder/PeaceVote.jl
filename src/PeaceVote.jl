@@ -37,6 +37,12 @@ struct Notary
     hash::Function
 end
 
+### This type is necessary because eval makes world age problem. 
+struct New{T}
+    invoke::T
+end
+
+
 struct Deme{T}
     spec::DemeSpec
     notary::Notary
@@ -49,7 +55,7 @@ include("keys.jl")
 include("deme.jl")
 
 
-export DemeSpec, Notary,  Deme, Ledger, save
+export DemeSpec, New, Notary, Deme, Ledger, save
 export sync!, register, braid!, vote, propose, braidchain, count
 export Signer, KeyChain
 
