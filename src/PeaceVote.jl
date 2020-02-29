@@ -42,6 +42,14 @@ struct New{T}
     invoke::T
 end
 
+unbox(x) = x
+unbox(x::New{T}) where T = x.invoke
+unbox(args::Tuple) = Tuple(unbox(i) for i in args)
+
+import Base.getindex
+getindex(::Type{New},x::Type) = Union{x,New{x}}
+
+
 
 struct Deme{T}
     spec::DemeSpec
@@ -53,9 +61,10 @@ include("braidchain.jl")
 include("envelopes.jl")
 include("keys.jl")
 include("deme.jl")
+include("invokelatest.jl")
 
-
-export DemeSpec, New, Notary, Deme, Ledger, save
+export New, unbox, getindex
+export DemeSpec, Notary, Deme, Ledger, save
 export sync!, register, braid!, vote, propose, braidchain, count
 export Signer, KeyChain
 

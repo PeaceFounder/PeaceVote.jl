@@ -75,11 +75,11 @@ Notary(crypto::Expr,deps::Vector{Symbol}) = Notary(crypto,UUID[uuid(dep) for dep
 Notary(metadata::DemeSpec) = Notary(metadata.crypto,metadata.deps)
 
 
-verify(data::AbstractString,signature,notary::Notary) = notary.verify(data,signature)
-verify(data::AbstractString,signature,notary::New{Notary}) = invokelatest(notary->verify(data,signature,notary),notary.invoke)
+#verify(data::AbstractString,signature,notary::Notary) = notary.verify(data,signature)
+#verify(data::AbstractString,signature,notary::New{Notary}) = invokelatest(notary->verify(data,signature,notary),notary.invoke)
 
-hash(data::AbstractString,notary::Notary) = notary.hash(data)
-hash(data::AbstractString,notary::New{Notary}) = invokelatest(notary->hash(data,notary),notary.invoke)
+#hash(data::AbstractString,notary::Notary) = notary.hash(data)
+#hash(data::AbstractString,notary::New{Notary}) = invokelatest(notary->hash(data,notary),notary.invoke)
 
 
 function DemeSpec(name::AbstractString,crypto::Expr,deps::Vector{Symbol},peacefounder::Symbol,notary::Notary)
@@ -92,7 +92,7 @@ function DemeSpec(name::AbstractString,crypto::Expr,deps::Vector{Symbol},peacefo
     DemeSpec(demeuuid,name,maintainer.id,crypto,deps_uuid,peacefounder_uuid)
 end
 
-DemeSpec(name::AbstractString,crypto::Expr,deps::Vector{Symbol},peacefounder::Symbol,notary::New{Notary}) = invokelatest(notary -> DemeSpec(name,crypto,deps,peacefounder,notary),notary.invoke)::DemeSpec
+#DemeSpec(name::AbstractString,crypto::Expr,deps::Vector{Symbol},peacefounder::Symbol,notary::New{Notary}) = invokelatest(notary -> DemeSpec(name,crypto,deps,peacefounder,notary),notary.invoke)::DemeSpec
 
 ### This one does not work. Why?
 DemeSpec(name::AbstractString,crypto::Expr,deps::Vector{Symbol},peacefounder::Symbol) = DemeSpec(name,crypto,deps,peacefounder,Notary(crypto,deps))
@@ -131,10 +131,11 @@ end
 Ledger(::Type{Deme},port) = error("Ledger is not implemented by peacefounder")
 sync!(::Deme) = error("sync! is not implemented by peacefounder")
 register(::Deme,certificate::Certificate) = error("register is not implemented by peacefounder")
-braid(::Deme,newsigner::AbstractSigner,oldsigner::AbstractSigner) = error("braid is not implemented by peacefounder")
+braid!(::Deme,newsigner::AbstractSigner,oldsigner::AbstractSigner) = error("braid is not implemented by peacefounder")
 vote(::Deme,option::AbstractOption,signer::AbstractSigner) = error("vote is not implemented by peacefounder")
 propose(::Deme,proposal::AbstractProposal,signer::AbstractSigner) = error("propose is not implemented by peacefounder")
 braidchain(::Deme) = error("braidchain is not implemented by peacefounder")
 
+### Perhaps a different name should be used. Or the proposal could be the first argument to reflect Base.count.
 import Base.count
 count(deme::Deme, proposal::AbstractProposal) = error("count is not implemented by peacefounder")

@@ -77,6 +77,7 @@ function KeyChain(deme::Deme,account::AbstractString)
     return KeyChain(deme,account,member,voters)
 end
 
+### I could actually define a constructor for New so it would construct the type.
 KeyChain(deme::New{Deme},account::AbstractString) = New(invokelatest(deme->KeyChain(deme,account),deme.invoke)::KeyChain)
 
 #KeyChain(deme::Deme,account::AbstractString) = KeyChain(deme.spec.uuid,deme.notary,account)
@@ -97,7 +98,7 @@ function braid!(kc::KeyChain)
     push!(kc.signers,newvoter)
 end
 
-braid!(kc::New{KeyChain}) = invokelatest(kc->braid!(kc),kc.invoke)
+#braid!(kc::New{KeyChain}) = invokelatest(kc->braid!(kc),kc.invoke)
 
 voter(kc::KeyChain) = kc.signers[end]
 
@@ -121,7 +122,7 @@ function vote(option::AbstractOption,keychain::KeyChain)
     vote(keychain.deme,option,v)
 end
 
-vote(option::AbstractOption,keychain::New{KeyChain}) = invokelatest(kc->vote(option,kc),keychain.invoke)
+#vote(option::AbstractOption,keychain::New{KeyChain}) = invokelatest(kc->vote(option,kc),keychain.invoke)
 
 function propose(msg,options,member::Signer)
     com = community(member.uuid)
@@ -129,6 +130,7 @@ function propose(msg,options,member::Signer)
 end
 
 propose(proposal::AbstractProposal,kc::KeyChain) = propose(kc.deme, proposal, kc.member)
-propose(proposal::AbstractProposal,kc::New{KeyChain}) = invokelatest(kc->propose(proposal,kc),kc.invoke)
+
+#propose(proposal::AbstractProposal,kc::New{KeyChain}) = invokelatest(kc->propose(proposal,kc),kc.invoke)
 
 #whistle(msg,keychain) = vote(msg,keychain)
