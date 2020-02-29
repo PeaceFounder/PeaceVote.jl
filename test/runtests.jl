@@ -14,7 +14,6 @@ verify(data,signature) = CryptoSignatures.verify(signature,G) && hash(data)==sig
 end
 
 
-
 deps = Symbol[:Nettle,:CryptoGroups,:CryptoSignatures]
 
 #notary = PeaceVote.Notary(crypto,deps)

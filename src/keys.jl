@@ -35,15 +35,9 @@ function Signer(uuid::UUID,notary::Notary,account::AbstractString)
     return Signer(uuid,id,sign)
 end
 
-Signer(uuid::UUID,notary::New{Notary},account::AbstractString) = New(invokelatest(notary->Signer(uuid,notary,account),notary.invoke)::Signer)
-
 Signer(deme::Deme,account::AbstractString) = Signer(deme.spec.uuid,deme.notary,account)
-Signer(deme::New{Deme{T}},account::AbstractString) where T = New(Signer(deme.invoke.spec.uuid,deme.invoke.notary,account))
 
-
-sign(data::AbstractString,signer::Signer) = signer.sign(data)
-
-
+# sign(data::AbstractString,signer::Signer) = signer.sign(data)
 
 ### The KeyChain part. 
 
@@ -78,10 +72,10 @@ function KeyChain(deme::Deme,account::AbstractString)
 end
 
 ### I could actually define a constructor for New so it would construct the type.
-KeyChain(deme::New{Deme},account::AbstractString) = New(invokelatest(deme->KeyChain(deme,account),deme.invoke)::KeyChain)
+
 
 #KeyChain(deme::Deme,account::AbstractString) = KeyChain(deme.spec.uuid,deme.notary,account)
-KeyChain(deme::Union{Deme,New{Deme}}) = KeyChain(deme,"")
+KeyChain(deme::Deme) = KeyChain(deme,"")
 
 ### I could use oldvoter.id as filename
 function braid!(kc::KeyChain)

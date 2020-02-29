@@ -1,6 +1,6 @@
 module PeaceVote
 
-#import Base.save
+using Pkg.Types: Context
 using Base: UUID
 
 const CONFIG_DIR = homedir() * "/.peacevote/"
@@ -20,13 +20,12 @@ abstract type AbstractOption end
 abstract type AbstractProposal end
 abstract type AbstractRecord end
 
-
 struct DemeSpec
     uuid::UUID
     name::AbstractString
     maintainer # ::BigInt
-    crypto::Expr
-    deps::Vector{UUID} # libraries to initialize Signatures type. 
+    crypto::Union{Symbol,Expr} 
+    deps::Union{UUID,Vector{UUID}} # libraries to initialize Signatures type. In case when crypto is a symbol the libraries are imported into the working namespace (Notary and Cypher).
     peacefounder::UUID # Everything else appart from signature stuff
 end
 
@@ -37,18 +36,26 @@ struct Notary
     hash::Function
 end
 
-### This type is necessary because eval makes world age problem. 
-struct New{T}
-    invoke::T
+struct Cypher
+    G # a group for DiffieHellman key exchange
+    rng::Function
+    secureio::Function 
 end
 
-unbox(x) = x
-unbox(x::New{T}) where T = x.invoke
-unbox(args::Tuple) = Tuple(unbox(i) for i in args)
+struct CypherSuite{T} end
 
-import Base.getindex
-getindex(::Type{New},x::Type) = Union{x,New{x}}
+uuid(ctx::Context,name::AbstractString) = ctx.env.project.deps[name]
+uuid(ctx::Context,name::Symbol) = uuid(ctx,String(name))
+uuid(ctx::Context,name::Module) = uuid(ctx,nameof(name))
+uuid(name::Union{Module,Symbol,AbstractString}) = uuid(Context(),name)
 
+CypherSuite(uuid::UUID) = CypherSuite{uuid.value}
+CypherSuite(m::Module) = CypherSuite(uuid(m))
+
+Notary(cyphersuite::UUID,crypto::Symbol) = Notary(CypherSuite(cyphersuite),crypto)::Notary
+Notary(metadata::DemeSpec) = Notary(metadata.deps,metadata.crypto)
+
+Cypher(cyphersuite::UUID,crypto::Symbol) = Cypher(CypherSuite(cyphersuite),crypto)::Cypher
 
 
 struct Deme{T}
@@ -61,10 +68,10 @@ include("braidchain.jl")
 include("envelopes.jl")
 include("keys.jl")
 include("deme.jl")
-include("invokelatest.jl")
+include("evalnotaries.jl")
 
 export New, unbox, getindex
-export DemeSpec, Notary, Deme, Ledger, save
+export DemeSpec, Notary, Cypher, CypherSuite, Deme, Ledger, save
 export sync!, register, braid!, vote, propose, braidchain, count
 export Signer, KeyChain
 
