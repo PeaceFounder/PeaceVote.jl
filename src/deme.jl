@@ -32,37 +32,38 @@ end
 #hash(data::AbstractString,notary::New{Notary}) = invokelatest(notary->hash(data,notary),notary.invoke)
 
 
-function DemeSpec(name::AbstractString,crypto::Expr,deps::Vector{Symbol},peacefounder::Symbol,notary::Notary)
+function DemeSpec(name::AbstractString,crypto::Symbol,cryptodep::Symbol,cypherconfig::Symbol,cypherdep::Symbol,peacefounder::Symbol)#,notary::Notary)
     ctx = Context()
-    deps_uuid = UUID[uuid(ctx,dep) for dep in deps]
+    #deps_uuid = UUID[uuid(ctx,dep) for dep in deps]
+    cryptodep_uuid = uuid(ctx,cryptodep)
+    cypherdep_uuid = uuid(ctx,cypherdep) 
     peacefounder_uuid = uuid(ctx,peacefounder)
     demeuuid = _uuid(name)
 
+    notary = Notary(cryptodep_uuid,crypto)
     maintainer = Signer(demeuuid,notary,"maintainer")
-    DemeSpec(demeuuid,name,maintainer.id,crypto,deps_uuid,peacefounder_uuid)
+    DemeSpec(demeuuid,name,maintainer.id,crypto,cryptodep_uuid,cypherconfig,cypherdep_uuid,peacefounder_uuid)
 end
 
 #DemeSpec(name::AbstractString,crypto::Expr,deps::Vector{Symbol},peacefounder::Symbol,notary::New{Notary}) = invokelatest(notary -> DemeSpec(name,crypto,deps,peacefounder,notary),notary.invoke)::DemeSpec
 
 ### This one does not work. Why?
-DemeSpec(name::AbstractString,crypto::Expr,deps::Vector{Symbol},peacefounder::Symbol) = DemeSpec(name,crypto,deps,peacefounder,Notary(deps,crypto))
-
-
+#DemeSpec(name::AbstractString,crypto::Union{Symbol,Expr},deps::Vector{Symbol},cypherconfig::Symbol,cypherdep::Symbol,peacefounder::Symbol) = DemeSpec(name,crypto,deps,cypherconfig,cypherdep,peacefounder,Notary(deps,crypto))
 
 DemeType(uuid::UUID) = Deme{uuid.value}
 DemeType(m::Module) = DemeType(uuid(m))
 
-function Deme(spec::DemeSpec,notary::Notary,port)
+function Deme(spec::DemeSpec,notary::Notary,cypher::Cypher,port)
     ThisDeme = DemeType(spec.peacefounder)
     if port==nothing
         ledger = nothing
     else
         ledger = Ledger(ThisDeme,port)
     end
-    ThisDeme(spec,notary,ledger)
+    ThisDeme(spec,notary,cypher,ledger)
 end
 
-Deme(spec::DemeSpec,port) = Deme(spec,Notary(spec),port)
+Deme(spec::DemeSpec,port) = Deme(spec,Notary(spec),Cypher(spec),port)
 Deme(uuid::UUID,port) = Deme(DemeSpec(uuid),port)
 
 ### In this way the working namespace would not need to know anything about DemeType. 
