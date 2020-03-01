@@ -11,7 +11,7 @@ Verifies that the signature and calculates id of the public key.
 """
 function unwrap(envelope::AbstractEnvelope,notary::Notary)
     id = notary.verify("$(envelope.data)",envelope.signature)
-    return envelope.data, id
+    return envelope.data, (envelope.uuid,id)
 end
 
 function unwrap(envelope::AbstractEnvelope)

@@ -53,15 +53,20 @@ end
 DemeType(uuid::UUID) = Deme{uuid.value}
 DemeType(m::Module) = DemeType(uuid(m))
 
-function Deme(spec::DemeSpec,notary::Notary,cypher::Cypher,port)
+function Deme(spec::DemeSpec,notary::Notary,cypher::Cypher,ledger)
     ThisDeme = DemeType(spec.peacefounder)
+    ThisDeme(spec,notary,cypher,ledger)
+end
+
+function Deme(spec::DemeSpec,notary::Notary,cypher::Cypher,port::AbstractPort)
     if port==nothing
         ledger = nothing
     else
         ledger = Ledger(ThisDeme,port)
     end
-    ThisDeme(spec,notary,cypher,ledger)
+    Deme(spec,notary,cypher,ledger)
 end
+
 
 Deme(spec::DemeSpec,port) = Deme(spec,Notary(spec),Cypher(spec),port)
 Deme(uuid::UUID,port) = Deme(DemeSpec(uuid),port)

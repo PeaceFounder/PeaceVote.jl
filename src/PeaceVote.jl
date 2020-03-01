@@ -19,6 +19,8 @@ abstract type AbstractID end
 abstract type AbstractOption end
 abstract type AbstractProposal end
 abstract type AbstractRecord end
+abstract type AbstractPort end
+abstract type AbstractLedger end
 
 struct DemeSpec
     uuid::UUID

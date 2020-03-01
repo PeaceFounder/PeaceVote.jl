@@ -35,6 +35,7 @@ function Signer(uuid::UUID,notary::Notary,account::AbstractString)
     return Signer(uuid,id,sign)
 end
 
+Signer(uuid::UUID,account::AbstractString) = Signer(uuid,Notary(DemeSpec(uuid)),account)
 Signer(deme::Deme,account::AbstractString) = Signer(deme.spec.uuid,deme.notary,account)
 
 # sign(data::AbstractString,signer::Signer) = signer.sign(data)
