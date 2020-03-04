@@ -77,6 +77,14 @@ include("keys.jl")
 include("deme.jl")
 #include("evalnotaries.jl")
 
+### Some methods necessary 
+
+record!(ledger::AbstractLedger,fname::AbstractString,data) = error("Must be implemented by ledger type $(typeof(ledger))")
+records(ledger::AbstractLedger) = error("Must be implemented by ledger type $(typeof(ledger))")
+loadrecord(record) = error("Must be implemented by $(typeof(record))")
+
+###
+
 export DemeSpec, Notary, Cypher, CypherSuite, Deme, Ledger, save
 export sync!, register, braid!, vote, propose, braidchain, count
 export Signer, KeyChain
