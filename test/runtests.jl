@@ -1,7 +1,6 @@
 using PeaceVote
 using PeaceCypher
 
-
 demespec = PeaceVote.DemeSpec("PeaceDeme",:default,:PeaceCypher,:default,:PeaceCypher,:PeaceVote)
 
 # Now some testing 

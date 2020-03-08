@@ -58,18 +58,20 @@ function Deme(spec::DemeSpec,notary::Notary,cypher::Cypher,ledger)
     ThisDeme(spec,notary,cypher,ledger)
 end
 
-function Deme(spec::DemeSpec,notary::Notary,cypher::Cypher,port::AbstractPort)
-    if port==nothing
-        ledger = nothing
+function Deme(spec::DemeSpec;ledger=true)
+    notary = Notary(spec)
+    cypher = Cypher(spec)
+    ThisDeme = DemeType(spec.peacefounder)
+
+    if ledger==true
+        ledger_ = Ledger(ThisDeme,spec.uuid)
     else
-        ledger = Ledger(ThisDeme,port)
+        ledger_ = nothing
     end
-    Deme(spec,notary,cypher,ledger)
+    ThisDeme(spec,notary,cypher,ledger_)
 end
 
-
-Deme(spec::DemeSpec,port) = Deme(spec,Notary(spec),Cypher(spec),port)
-Deme(uuid::UUID,port) = Deme(DemeSpec(uuid),port)
+Deme(uuid::UUID) = Deme(DemeSpec(uuid))
 
 ### In this way the working namespace would not need to know anything about DemeType. 
 
@@ -89,7 +91,7 @@ register(::Deme,certificate::Certificate) = error("register is not implemented b
 braid!(::Deme,newsigner::AbstractSigner,oldsigner::AbstractSigner) = error("braid is not implemented by peacefounder")
 vote(::Deme,option::AbstractOption,signer::AbstractSigner) = error("vote is not implemented by peacefounder")
 propose(::Deme,proposal::AbstractProposal,signer::AbstractSigner) = error("propose is not implemented by peacefounder")
-braidchain(::Deme) = error("braidchain is not implemented by peacefounder")
+BraidChain(::Deme) = error("braidchain is not implemented by peacefounder")
 
 ### Perhaps a different name should be used. Or the proposal could be the first argument to reflect Base.count.
 import Base.count

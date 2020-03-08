@@ -71,6 +71,8 @@ struct Deme{T}
     ledger ### This one is used by peacefounder to construct configuration
 end
 
+Ledger(::Type{Deme},deme::UUID) = error("Ledger must be implemented by the peacefounder")
+
 include("braidchain.jl")
 include("envelopes.jl")
 include("keys.jl")
@@ -88,5 +90,6 @@ loadrecord(record) = error("Must be implemented by $(typeof(record))")
 export DemeSpec, Notary, Cypher, CypherSuite, Deme, Ledger, save
 export sync!, register, braid!, vote, propose, braidchain, count
 export Signer, KeyChain
+export ID, Certificate, proposals, Option
 
 end # module

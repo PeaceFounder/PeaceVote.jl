@@ -106,7 +106,7 @@ function voter(kc::KeyChain,vset::Set,bc)
 end
 
 function voter(kc::KeyChain,x::Union{Proposal,Option}) 
-    bc = braidchain(kc.deme)
+    bc = BraidChain(kc.deme).records 
     voter(kc,voters(bc,x),bc)
 end    
 
@@ -119,12 +119,13 @@ end
 
 #vote(option::AbstractOption,keychain::New{KeyChain}) = invokelatest(kc->vote(option,kc),keychain.invoke)
 
-function propose(msg,options,member::Signer)
-    com = community(member.uuid)
-    com.propose(msg, options, member)
-end
+propose(msg,options,kc::KeyChain) = propose(kc.deme,msg,options,kc.member)
+    #com = community(member.uuid)
+    #com.propose(msg, options, member)
 
-propose(proposal::AbstractProposal,kc::KeyChain) = propose(kc.deme, proposal, kc.member)
+
+#propose(msg,options,kc::KeyChain) = propose(kc.deme, proposal, kc.member)
+#propose(proposal::AbstractProposal,kc::KeyChain) = propose(kc.deme, proposal, kc.member)
 
 #propose(proposal::AbstractProposal,kc::New{KeyChain}) = invokelatest(kc->propose(proposal,kc),kc.invoke)
 

@@ -1,7 +1,7 @@
 name = "PeaceVote"
 uuid = "129db535-0459-46ad-8d3d-b1fb8f318c74"
 authors = ["akels <akels14@gmail.com>"]
-version = "0.2.0"
+version = "0.2.1"
 
 [deps]
 Pkg = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
@@ -11,9 +11,7 @@ Serialization = "9e88b42a-f829-5b0c-bbe9-9e923198166b"
 julia = "1"
 
 [extras]
-CryptoGroups = "bc997328-bedd-407e-bcd3-5758e064a52d"
-CryptoSignatures = "35cc5888-0c46-470e-89c7-eafcaf79a1aa"
-Nettle = "49dea1ee-f6fa-5aa6-9a11-8816cee7d4b9"
+PeaceCypher = "7743456c-e0c5-4477-a2b6-196c240b0368"
 
 [targets]
-test = ["CryptoGroups","CryptoSignatures","Nettle"]
+test = ["PeaceCypher",]
