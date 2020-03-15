@@ -1,5 +1,5 @@
 # Just a quick fix
-using Serialization: serialize, deserialize
+using Pkg.TOML
 using Base: UUID
 
 _uuid(name::AbstractString) = UUID(Base.hash(name))
@@ -8,10 +8,57 @@ function add(spec::DemeSpec)
     error("Not implemented")
 end
 
+import Base.Dict
+function Dict(demespec::DemeSpec)
+    config = Dict()
+
+    #metadata = Dict()
+    config["name"] = demespec.name
+    config["uuid"] = "$(demespec.uuid)"
+    config["maintainer"] = string(demespec.maintainer,base=16)
+    
+    ### I could have a second layer for this!
+    
+    notary = Dict()
+    notary["config"] = "$(demespec.crypto)"
+    notary["uuid"] = "$(demespec.cryptodep)"
+
+    cypher = Dict()
+    cypher["config"] = "$(demespec.cypherconfig)"
+    cypher["uuid"] = "$(demespec.cypherdep)"
+
+    peacefounder = Dict()
+    peacefounder["uuid"] = "$(demespec.peacefounder)"
+
+
+    #config["metadata"] = metadata
+    config["notary"] = notary
+    config["cypher"] = cypher
+    config["peacefounder"] = peacefounder
+
+    return config
+end
+
+function DemeSpec(dict::Dict)
+    name = dict["name"]
+    uuid = UUID(dict["uuid"])
+    maintainer = parse(BigInt,dict["maintainer"],base=16) ### May need to change this one 
+    crypto = Symbol(dict["notary"]["config"])
+    cryptodep = UUID(dict["notary"]["uuid"])
+    cypherconfig = Symbol(dict["cypher"]["config"])
+    cypherdep = UUID(dict["cypher"]["uuid"])
+    peacefounder = UUID(dict["peacefounder"]["uuid"])
+
+    DemeSpec(uuid,name,maintainer,crypto,cryptodep,cypherconfig,cypherdep,peacefounder)
+end
+
 #import Base.save
 function save(fname::AbstractString,deme::DemeSpec)
     mkpath(dirname(fname))
-    serialize(fname,deme)
+    dict = Dict(deme)
+    open(fname, "w") do io
+        TOML.print(io, dict)
+    end
 end
 
 save(deme::DemeSpec) = save(demefile(deme.uuid),deme)
@@ -19,7 +66,8 @@ save(deme::DemeSpec) = save(demefile(deme.uuid),deme)
 function DemeSpec(uuid::UUID)
     specfile = demefile(uuid)
     @assert isfile(specfile) "No deme spec found for $uuid"
-    deserialize(specfile)
+    dict = TOML.parsefile(specfile)
+    DemeSpec(dict)
 end
 
 
@@ -30,7 +78,6 @@ end
 
 #hash(data::AbstractString,notary::Notary) = notary.hash(data)
 #hash(data::AbstractString,notary::New{Notary}) = invokelatest(notary->hash(data,notary),notary.invoke)
-
 
 function DemeSpec(name::AbstractString,crypto::Symbol,cryptodep::Symbol,cypherconfig::Symbol,cypherdep::Symbol,peacefounder::Symbol)#,notary::Notary)
     ctx = Context()

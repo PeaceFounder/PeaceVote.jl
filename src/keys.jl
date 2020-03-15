@@ -1,10 +1,13 @@
 ### This file contains all functions which are necessary for accessing .peacevote/keys folder. In future it would be great to have a password prtotection so one could do easier backups.
 
-using Serialization: serialize, deserialize
+using Pkg.TOML
 
 function _save(s,fname) 
     mkpath(dirname(fname))
-    serialize(fname,s)
+    dict = Dict(s)
+    open(fname, "w") do io
+        TOML.print(io, dict)
+    end
 end
 
 
@@ -22,8 +25,9 @@ function Signer(uuid::UUID,notary::Notary,account::AbstractString)
         s = notary.Signer()
         _save(s,fname)
     end
-    
-    signer = deserialize(fname)
+
+    dict = TOML.parsefile(fname)
+    signer = notary.Signer(dict)
     sign(data) = notary.Signature(data,signer)
 
     test = "A test message."
