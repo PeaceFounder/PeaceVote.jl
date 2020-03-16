@@ -10,13 +10,6 @@ function _save(s,fname)
     end
 end
 
-
-struct Signer <: AbstractSigner
-    uuid::UUID
-    id
-    sign::Function
-end
-
 function Signer(uuid::UUID,notary::Notary,account::AbstractString)
     fname = keydir(uuid) * account 
     
@@ -46,13 +39,6 @@ Signer(deme::Deme,account::AbstractString) = Signer(deme.spec.uuid,deme.notary,a
 
 ### The KeyChain part. 
 
-struct KeyChain <: AbstractSigner
-    deme::Deme ### This is necessary to make braid! function obvious  
-    account
-    member::Signer
-    signers::Vector{Signer}
-end
-
 function KeyChain(deme::Deme,account::AbstractString)
     uuid = deme.spec.uuid
     notary = deme.notary
@@ -78,59 +64,10 @@ end
 
 ### I could actually define a constructor for New so it would construct the type.
 
-
 #KeyChain(deme::Deme,account::AbstractString) = KeyChain(deme.spec.uuid,deme.notary,account)
 KeyChain(deme::Deme) = KeyChain(deme,"")
 
-### I could use oldvoter.id as filename
-function braid!(kc::KeyChain)
-    if length(kc.signers)==0 
-        oldvoter = kc.member
-    else
-        oldvoter = kc.signers[end]
-    end
-
-    newvoter = Signer(kc.deme,kc.account * "/voters/$(oldvoter.id)")
-
-    braid!(kc.deme,newvoter,oldvoter)
-    # if fails, delete the newvoter
-    push!(kc.signers,newvoter)
-end
-
-#braid!(kc::New{KeyChain}) = invokelatest(kc->braid!(kc),kc.invoke)
-
-voter(kc::KeyChain) = kc.signers[end]
-
-function voter(kc::KeyChain,vset::Set,bc)
-    for v in kc.signers 
-        if v.id in vset
-            return v
-        end
-    end
-end
-
-function voter(kc::KeyChain,x::Union{Proposal,Option}) 
-    bc = BraidChain(kc.deme).records 
-    voter(kc,voters(bc,x),bc)
-end    
-
-voter(kc::KeyChain,vset::Set) = voter(kc,vset,braidchain(kc.deme))
-
-function vote(option::AbstractOption,keychain::KeyChain)
-    v = voter(keychain,option)
-    vote(keychain.deme,option,v)
-end
-
-#vote(option::AbstractOption,keychain::New{KeyChain}) = invokelatest(kc->vote(option,kc),keychain.invoke)
-
-propose(msg,options,kc::KeyChain) = propose(kc.deme,msg,options,kc.member)
     #com = community(member.uuid)
     #com.propose(msg, options, member)
 
 
-#propose(msg,options,kc::KeyChain) = propose(kc.deme, proposal, kc.member)
-#propose(proposal::AbstractProposal,kc::KeyChain) = propose(kc.deme, proposal, kc.member)
-
-#propose(proposal::AbstractProposal,kc::New{KeyChain}) = invokelatest(kc->propose(proposal,kc),kc.invoke)
-
-#whistle(msg,keychain) = vote(msg,keychain)

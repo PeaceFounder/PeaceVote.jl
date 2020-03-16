@@ -124,22 +124,9 @@ Deme(uuid::UUID) = Deme(DemeSpec(uuid))
 
 ### There still would be no possibility to dispatch accuratelly if namespace is polluted
 
-
 function info(deme::Deme)
     @show deme
 end
 
 
 ### Definitions which must be implemented by PeaceFounder
-
-Ledger(::Type{Deme},port) = error("Ledger is not implemented by peacefounder")
-sync!(::Deme) = error("sync! is not implemented by peacefounder")
-register(::Deme,certificate::Certificate) = error("register is not implemented by peacefounder")
-braid!(::Deme,newsigner::AbstractSigner,oldsigner::AbstractSigner) = error("braid is not implemented by peacefounder")
-vote(::Deme,option::AbstractOption,signer::AbstractSigner) = error("vote is not implemented by peacefounder")
-propose(::Deme,proposal::AbstractProposal,signer::AbstractSigner) = error("propose is not implemented by peacefounder")
-BraidChain(::Deme) = error("braidchain is not implemented by peacefounder")
-
-### Perhaps a different name should be used. Or the proposal could be the first argument to reflect Base.count.
-import Base.count
-count(deme::Deme, proposal::AbstractProposal) = error("count is not implemented by peacefounder")
