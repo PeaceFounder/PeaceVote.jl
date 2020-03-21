@@ -1,31 +1,41 @@
-Contract(x,signer::AbstractSigner) = Contract(x,signer.sign("$x"))
+Certificate(x,signer::AbstractSigner) = Certificate(x,signer.sign("$x"))
 
-Envelope(data,signer::AbstractSigner) = Envelope(signer.uuid,Contract(data,signer))
 
-function Voucher(envelope::Envelope) 
+Envelope(data,signer::AbstractSigner) = Envelope(signer.uuid,Certificate(data,signer))
+
+verify(cert::Certificate,notary::Notary) = notary.verify("$(cert.document)",cert.signature) 
+
+function verify(envelope::Envelope)
+    demespec = DemeSpec(envelope.uuid)
+    notary = Notary(demespec)
+    id = verify(envelope.contract,notary)
+    return DemeID(envelope.uuid,id)
+end
+
+
+function Intent(envelope::Envelope) 
     demespec = DemeSpec(envelope.uuid)
     notary = Notary(demespec)
 
     contract = envelope.contract
-    id = notary.verify("$(contract.document)",contract.signatures) 
+    id = notary.verify("$(contract.document)",contract.signature) 
 
-    ref = ExtRef(envelope.uuid,id)
-    return Voucher(document,ref)
+    ref = DemeID(envelope.uuid,id)
+    return Intent(document,ref)
 end
 
-function Voucher(contract::Contract,notary::Notary)
-    id = notary.verify("$(contract.document)",contract.signatures) 
-    ref = LocRef(envelope.uuid,id)
-    return Voucher(document,ref)
+function Intent(contract::Certificate,notary::Notary)
+    id = notary.verify("$(contract.document)",contract.signature) 
+    return Intent(contract.document,id)
 end    
 
-function Voucher(contract::Contract{T},notary::Notary) where T <: AbstractBraid
-    refs = LocRef[]
-    for s in contract.signatures
+function Consensus(contract::Contract,notary::Notary) 
+    refs = ID[]
+    for s in contract.signature
         id = notary.verify("$(contract.document)",s)
-        push!(refs,LocRef(id))
+        push!(refs,id)
     end
-    return Voucher(document,refs)
+    return Consensus(document,refs)
 end
 
 
@@ -46,7 +56,7 @@ function braid!(kc::KeyChain)
         oldvoter = kc.signers[end]
     end
 
-    newvoter = Signer(kc.deme,kc.account * "/voters/$(oldvoter.id)")
+    newvoter = Signer(kc.deme,kc.account * "/voters/$(string(oldvoter.id))")
 
     braid!(kc.deme,newvoter,oldvoter)
     # if fails, delete the newvoter
@@ -65,9 +75,10 @@ function voter(kc::KeyChain,vset::Set,bc)
     end
 end
 
-function voter(kc::KeyChain,x::Union{Proposal,Vote}) 
+function voter(kc::KeyChain,x::AbstractVote) 
     bc = BraidChain(kc.deme).records 
-    voter(kc,voters(bc,x),bc)
+    vset = voters(bc[1:x.pid])
+    voter(kc,vset,bc)
 end    
 
 voter(kc::KeyChain,vset::Set) = voter(kc,vset,braidchain(kc.deme))
@@ -79,7 +90,7 @@ end
 
 #vote(option::AbstractOption,keychain::New{KeyChain}) = invokelatest(kc->vote(option,kc),keychain.invoke)
 
-propose(msg,options,kc::KeyChain) = propose(kc.deme,msg,options,kc.member)
+
 
 ##### API
 
@@ -96,8 +107,10 @@ register(::Deme,certificate::Contract{T}) where T <: AbstractID = error("registe
 braid!(::Deme,newsigner::AbstractSigner,oldsigner::AbstractSigner) = error("braid is not implemented by peacefounder")
 vote(::Deme,option::AbstractVote,signer::AbstractSigner) = error("vote is not implemented by peacefounder")
 propose(::Deme,proposal::AbstractProposal,signer::AbstractSigner) = error("propose is not implemented by peacefounder")
+propose(proposal::AbstractProposal,kc::KeyChain) = propose(kc.deme,proposal,kc.member)
+
 BraidChain(::Deme) = error("braidchain is not implemented by peacefounder")
 
 ### Perhaps a different name should be used. Or the proposal could be the first argument to reflect Base.count.
 import Base.count
-count(deme::Deme, proposal::AbstractProposal) = error("count is not implemented by peacefounder")
+count(index::Int, proposal::AbstractProposal,deme::Deme) = error("count is not implemented by peacefounder")

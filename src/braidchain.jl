@@ -59,34 +59,37 @@
 #     options### just a list of messages
 # end
 
-function addvoters!(voters::Set,braid::Braid)
-    for i in braid.signatures
+function addvoters!(voters::Set,input,output)
+    for i in input
         @assert i in voters
     end
     
-    for o in braid.document.ballot
+    for o in output
         push!(voters,o)
     end
 end
 
 
-function voters!(voters::Set,braid::Braid)
-    addvoters!(voters,braid)
-
-    for i in braid.signatures
+function voters!(voters::Set,input,output)
+    addvoters!(voters,input,output)
+    
+    for i in input
         pop!(voters,i)
     end
 
 end
 
+
+
 function voters!(voters::Set,messages::Vector)
     for msg in messages
-        if typeof(msg) <: Ticket
+        if typeof(msg) <: Intent{T} where T<:AbstractID
             push!(voters,msg.document.id)
-        elseif typeof(msg) <: Braid
-            voters!(voters,msg)
-        #elseif typeof(msg) == Vote
-            #@assert msg.id in voters "Vote with $(msg.uuid) is invalid."
+        elseif typeof(msg) <: Consensus{T} where T<:AbstractBraid
+            input = unique(msg.references)
+            output = unique(msg.document.ids)
+            @assert length(input)==length(output)
+            voters!(voters,input,output)
         end
     end
 end
@@ -115,8 +118,8 @@ end
 # end
 
 
-proposals(messages::Vector) = filter(msg -> typeof(msg) <: Proposal,messages)
-votes(messages::Vector) = filter(msg -> typeof(msg) <: Vote,messages)
+proposals(messages::Vector) = findall(msg -> typeof(msg) <: Intent{T} where T<:AbstractProposal,messages)
+votes(messages::Vector) = filter(msg -> typeof(msg) <: Intent{T} where T<:AbstractVote,messages)
 #tickets(messages::Vector) = filter(msg -> typeof(msg)==Ticket,messages)
 
 #function voters(proposal::Proposal,messages) 
@@ -152,7 +155,7 @@ end
 function members(braidchain)
     mset = Set()
     for msg in braidchain
-        if typeof(msg) <: Ticket
+        if typeof(msg) <: Intent{T} where T<:AbstractID
             push!(mset,msg.document.id)
         end
     end
@@ -161,10 +164,10 @@ end
 
 function members(braidchain,ca)
     mset = Set()
-    for item in braidchain
-        if typeof(item) <: ID
-            @assert item.references in ca "certificate for $(item.references) is not valid"
-            push!(mset,item.id)
+    for msg in braidchain
+        if typeof(msg) <: Intent{T} where T<:AbstractID
+            @assert msg.reference in ca "certificate with reference=$(msg.reference) is not valid"
+            push!(mset,msg.document.id)
         end
     end
     return mset
@@ -182,6 +185,12 @@ function allvoters(braidchain)
 
     return vset
 end
+
+# LocID
+# ExtID or GlobID, DemeID (sounds perfect)
+# It is also possible to write the functions for AbstractID. 
+
+
 
 # function count(uuid::UUID, proposal::Proposal, braidchain)
 #     com = community(uuid)

@@ -26,8 +26,8 @@ include("deme.jl")
 
 ###
 
-export DemeSpec, Notary, Cypher, CypherSuite, Deme, Ledger, save
+export DemeSpec, Notary, Cypher, CypherSuite, Deme, Ledger, save, ID, DemeID
 export sync!, register, braid!, vote, propose, braidchain, count
-export Signer, KeyChain
-
+export Signer, KeyChain, Envelope, Certificate, Contract, Consensus, Intent
+export proposals
 end # module

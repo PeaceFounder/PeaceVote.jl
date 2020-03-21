@@ -15,7 +15,7 @@ function Dict(demespec::DemeSpec)
     #metadata = Dict()
     config["name"] = demespec.name
     config["uuid"] = "$(demespec.uuid)"
-    config["maintainer"] = string(demespec.maintainer,base=16)
+    config["maintainer"] = string(demespec.maintainer.id,base=16)
     
     ### I could have a second layer for this!
     
@@ -42,7 +42,7 @@ end
 function DemeSpec(dict::Dict)
     name = dict["name"]
     uuid = UUID(dict["uuid"])
-    maintainer = parse(BigInt,dict["maintainer"],base=16) ### May need to change this one 
+    maintainer = ID(parse(BigInt,dict["maintainer"],base=16)) ### May need to change this one 
     crypto = Symbol(dict["notary"]["config"])
     cryptodep = UUID(dict["notary"]["uuid"])
     cypherconfig = Symbol(dict["cypher"]["config"])

@@ -18,3 +18,9 @@ signer = notary.Signer()
 msg = "Hello World"
 signature = notary.Signature(msg,signer)
 notary.verify(msg,signature)
+
+
+### Let's test Certificates and intent
+maintainer = Signer(deme,"maintainer")
+cert = Certificate("hello world",maintainer)
+intent = Intent(cert,notary)

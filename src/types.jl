@@ -7,11 +7,39 @@ abstract type AbstractRecord end
 abstract type AbstractPort end
 abstract type AbstractLedger end
 
+struct ID <: AbstractID
+    id::Union{BigInt,Nothing}
+end
+
+Base.string(id::ID; kwargs...) = string(id.id; kwargs...)
+
+Base.:(==)(a::ID,b::ID) = a.id==b.id
+Base.hash(a::ID,h::UInt) = hash(a.id,hash(:ID,h))
+Base.in(a::ID,b::ID) = a==b
+
+#Base.iterate(id::ID) = (id, nothing)
+
+struct DemeID <: AbstractID
+    uuid::UUID
+    id::ID
+end
+
+DemeID(uuid::UUID,id::BigInt) = DemeID(uuid,ID(id))
+
+Base.:(==)(a::DemeID,b::DemeID) = a.uuid==b.uuid && a.id==b.id
+Base.hash(a::DemeID,h::UInt) = hash(a.id,hash(a.uuid,hash(:DemeID, h)))
+
+# Do I need a base hash also here? 
+
+Base.in(a::DemeID,b::DemeID) = a==b
+
+
+#Base.iterate(id::DemeID) = (id, nothing)
 
 struct DemeSpec
     uuid::UUID
     name::AbstractString
-    maintainer # ::BigInt
+    maintainer::ID  # ::BigInt
     crypto::Symbol
     cryptodep::UUID
     #crypto::Union{Symbol,Expr} 
@@ -25,7 +53,6 @@ struct CypherSuite{T} end
 
 CypherSuite(uuid::UUID) = CypherSuite{uuid.value}
 CypherSuite(m::Module) = CypherSuite(uuid(m))
-
 
 struct Notary
     Signer::Function # allows to create signatures when necessery. id is obtained with verify on random data.
@@ -57,7 +84,7 @@ end
 ### Could have multiple signatures as one wishes
 struct Signer <: AbstractSigner
     uuid::UUID
-    id
+    id::ID
     sign::Function
 end
 
@@ -74,31 +101,41 @@ struct Contract{T}
     signatures
 end
 
+### In ususal computer science 
+### certified authorithy is called also a certificate.
+### However the therm voucher, verifier, issuer (tust anchor) would be more appropriate in such setting. 
+### On the other hand one might look on it as a certificate from the chain of trust. 
+### Anyway there should be a difference in the terminolgy.
+struct Certificate{T}
+    document::T
+    signature
+end
+
+
 ### This is the type which requires a dynamic dyspatch
 struct Envelope{T}
     uuid::UUID
-    contract::Contract{T}
+    contract::Certificate{T} # Perhaps Union{Contract{T},Certificate{T}}
 end
 
 
-struct LocRef
-    id::BigInt
-end
-
-struct ExtRef
-    uuid::UUID
-    id::BigInt
-end
-
-struct Voucher{T}
+struct Intent{T}
     document::T
-    references::Union{LocRef,ExtRef,Vector{LocRef}}
+    reference::Union{ID,DemeID}
+end
+
+### This one is associated to the contract
+# Gives permission to do something, like add a new key to the braidchain synchronically. 
+# Common consent
+struct Consensus{T}
+    document::T
+    references::Vector{ID}
 end
 
 ### 
-const ID = Voucher{T} where T <: AbstractID 
-const Braid = Voucher{T} where T <: AbstractBraid
-const Proposal = Voucher{T} where T <: AbstractProposal
-const Vote = Voucher{T} where T <: AbstractVote
+#const ID = Intent{T} where T <: AbstractID 
+const Braid = Consensus{T} where T <: AbstractBraid
+const Proposal = Intent{T} where T <: AbstractProposal
+const Vote = Intent{T} where T <: AbstractVote
 
 
