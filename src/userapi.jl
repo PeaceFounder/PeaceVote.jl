@@ -1,9 +1,8 @@
-Certificate(x,signer::AbstractSigner) = Certificate(x,signer.sign("$x"))
-
+Certificate(x,signer::AbstractSigner) = Certificate(x,Dict(signer.sign("$x")))
 
 Envelope(data,signer::AbstractSigner) = Envelope(signer.uuid,Certificate(data,signer))
 
-verify(cert::Certificate,notary::Notary) = notary.verify("$(cert.document)",cert.signature) 
+verify(cert::Certificate,notary::Notary) = notary.verify("$(cert.document)",notary.Signature(cert.signature)) 
 
 function verify(envelope::Envelope)
     demespec = DemeSpec(envelope.uuid)
@@ -18,24 +17,27 @@ function Intent(envelope::Envelope)
     notary = Notary(demespec)
 
     contract = envelope.contract
-    id = notary.verify("$(contract.document)",contract.signature) 
+    id = notary.verify("$(contract.document)",notary.Signature(contract.signature)) 
 
     ref = DemeID(envelope.uuid,id)
     return Intent(document,ref)
 end
 
 function Intent(contract::Certificate,notary::Notary)
-    id = notary.verify("$(contract.document)",contract.signature) 
+    signature = notary.Signature(contract.signature)
+    id = notary.verify("$(contract.document)",signature) 
     return Intent(contract.document,id)
 end    
 
 function Consensus(contract::Contract,notary::Notary) 
+    doc = "$(contract.document)"
     refs = ID[]
-    for s in contract.signature
-        id = notary.verify("$(contract.document)",s)
+    for s in contract.signatures
+        signature = notary.Signature(s)
+        id = notary.verify(doc,signature)
         push!(refs,id)
     end
-    return Consensus(document,refs)
+    return Consensus(contract.document,refs)
 end
 
 

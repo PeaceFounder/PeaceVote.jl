@@ -98,7 +98,7 @@ end
 
 struct Contract{T}
     document::T
-    signatures
+    signatures::Vector{Dict{String,Any}}
 end
 
 ### In ususal computer science 
@@ -108,7 +108,7 @@ end
 ### Anyway there should be a difference in the terminolgy.
 struct Certificate{T}
     document::T
-    signature
+    signature::Dict
 end
 
 
