@@ -11,7 +11,26 @@ struct ID <: AbstractID
     id::Union{BigInt,Nothing}
 end
 
-Base.string(id::ID; kwargs...) = string(id.id; kwargs...)
+function Base.string(id::ID; length=nothing, kwargs...) 
+    str = string(id.id; kwargs...)
+    if length!=nothing
+        len = Base.length(str)
+        @assert len<=length
+        pre = "0"^(length-len)        
+    else
+        pre = ""
+    end
+    return "$pre$str"
+end
+
+ID(str::AbstractString; kwargs...) = ID(parse(BigInt,str; kwargs...))
+
+import Base.Vector
+
+Vector{UInt8}(id::ID; kwargs...) = Vector{UInt8}(string(id; kwargs...))
+
+ID(bytes::Vector{UInt8}; kwargs...) = ID(String(copy(bytes)); kwargs...)
+
 
 Base.:(==)(a::ID,b::ID) = a.id==b.id
 Base.hash(a::ID,h::UInt) = hash(a.id,hash(:ID,h))
