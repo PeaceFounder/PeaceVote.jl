@@ -71,14 +71,6 @@ function DemeSpec(uuid::UUID)
 end
 
 
-### importdeps could be also used for the present namespace!!!
-
-#verify(data::AbstractString,signature,notary::Notary) = notary.verify(data,signature)
-#verify(data::AbstractString,signature,notary::New{Notary}) = invokelatest(notary->verify(data,signature,notary),notary.invoke)
-
-#hash(data::AbstractString,notary::Notary) = notary.hash(data)
-#hash(data::AbstractString,notary::New{Notary}) = invokelatest(notary->hash(data,notary),notary.invoke)
-
 function DemeSpec(name::AbstractString,crypto::Symbol,cryptodep::Symbol,cypherconfig::Symbol,cypherdep::Symbol,peacefounder::Symbol)#,notary::Notary)
     ctx = Context()
     #deps_uuid = UUID[uuid(ctx,dep) for dep in deps]
@@ -91,11 +83,6 @@ function DemeSpec(name::AbstractString,crypto::Symbol,cryptodep::Symbol,cypherco
     maintainer = Signer(demeuuid,notary,"maintainer")
     DemeSpec(demeuuid,name,maintainer.id,crypto,cryptodep_uuid,cypherconfig,cypherdep_uuid,peacefounder_uuid)
 end
-
-#DemeSpec(name::AbstractString,crypto::Expr,deps::Vector{Symbol},peacefounder::Symbol,notary::New{Notary}) = invokelatest(notary -> DemeSpec(name,crypto,deps,peacefounder,notary),notary.invoke)::DemeSpec
-
-### This one does not work. Why?
-#DemeSpec(name::AbstractString,crypto::Union{Symbol,Expr},deps::Vector{Symbol},cypherconfig::Symbol,cypherdep::Symbol,peacefounder::Symbol) = DemeSpec(name,crypto,deps,cypherconfig,cypherdep,peacefounder,Notary(deps,crypto))
 
 DemeType(uuid::UUID) = Deme{uuid.value}
 DemeType(m::Module) = DemeType(uuid(m))
@@ -128,5 +115,36 @@ function info(deme::Deme)
     @show deme
 end
 
+### Makes a ticket string which can be used by the register method
+function ticket(deme::DemeSpec,port,tooken::Int)
+    config = Dict("demespec"=>Dict(deme),"port"=>Dict(port),"tooken"=>tooken)
+    io = IOBuffer()
+    TOML.print(io, config)
+    return String(take!(io))
+end
+
+### To use this function one is supposed to know
+### How to create a identity
+
+function register(invite::Dict,profile::Profile; account="")
+
+    demespec = DemeSpec(invite["demespec"])
+    save(demespec)
+
+    deme = Deme(demespec)
+    if haskey(invite,"port")
+        sync!(deme,invite["port"]) 
+    end
+
+    tooken = invite["tooken"]
+    keychain = KeyChain(deme,account)
+    id = keychain.member.id
+    register(deme,profile,id,tooken)
+end
+
+register(invite::AbstractString,profile::Profile; kwargs...) = register(TOML.parse(invite),profile; kwargs...)
+
+#tooken = dict["tooken"]
+#register(deme,id,tooken)
 
 ### Definitions which must be implemented by PeaceFounder

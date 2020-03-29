@@ -1,65 +1,68 @@
-### Perhaps it could be an abstract type extended by the peacefounder
+Certificate(x,signer::AbstractSigner) = Certificate(x,Dict(signer.sign("$x")))
+
+Envelope(data,signer::AbstractSigner) = Envelope(signer.uuid,Certificate(data,signer))
+
+verify(cert::Certificate,notary::Notary) = notary.verify("$(cert.document)",notary.Signature(cert.signature)) 
+
+function verify(envelope::Envelope)
+    demespec = DemeSpec(envelope.uuid)
+    notary = Notary(demespec)
+    id = verify(envelope.contract,notary)
+    return DemeID(envelope.uuid,id)
+end
 
 
-### Perhaps I need to look into the Commands pattern. 
-### Here the first argument would always be UUID.
+function Intent(envelope::Envelope) 
+    demespec = DemeSpec(envelope.uuid)
+    notary = Notary(demespec)
+
+    contract = envelope.contract
+    id = notary.verify("$(contract.document)",notary.Signature(contract.signature)) 
+
+    ref = DemeID(envelope.uuid,id)
+    return Intent(document,ref)
+end
+
+function Intent(contract::Certificate,notary::Notary)
+    signature = notary.Signature(contract.signature)
+    id = notary.verify("$(contract.document)",signature) 
+    return Intent(contract.document,id)
+end    
+
+function Consensus(contract::Contract,notary::Notary) 
+    doc = "$(contract.document)"
+    refs = ID[]
+    for s in contract.signatures
+        signature = notary.Signature(s)
+        id = notary.verify(doc,signature)
+        push!(refs,id)
+    end
+    return Consensus(contract.document,refs)
+end
+
+function BraidChain(chain::Vector{Union{Certificate,Contract}},notary::Notary)
+    messages = []
+    for record in chain
+        if typeof(record) <: Certificate
+            intent = Intent(record,notary)
+            push!(messages,intent)
+        elseif typeof(record) <: Contract
+            braid = Consensus(record,notary)
+            push!(messages,braid)
+        else
+            error("The type $(typeof(record)) is not valid for braidchain")
+        end
+    end
+    
+    return BraidChain(messages)
+end
 
 
-#struct PeaceFounderType{T} end
-#struct PeaceFounderSingleton{T<:UUID} end
-
-#abstract type AbstractPeaceFounder end
+BraidChain(ledger::AbstractLedger,notary::Notary) = BraidChain(load(ledger),notary)
+BraidChain(deme::Deme) = BraidChain(deme.ledger,deme.notary)
 
 
-# struct PeaceFounderTrait
-#     uuid::Var{UUID}
-# end
-
-# One then specifies 
-
-# I need methods 
-# register
-# braid
-# vote
-# braidchain
-
-# then there are optional methods to certify
-# Perhaps I could have parametric type with Val. 
-
-
-# struct Ticket <: AbstractRecord
-#     uuid ### Id of commiunity issuing the certificate ### One may would not like to trust some communities as much as others. One needs this information to sample statistically for fake and real members.
-#     cid ### Id of the certifier
-#     id # id is uuid itself
-# end
-
-# struct Braid <: AbstractRecord
-#     ###
-#     uuid #uuid # so one could find the right braid
-#     bcid # ballot config id (for example server and mixer)
-#     input # a set
-#     output # a set with the same length
-# end
-
-
-### Let's look into theese two types
-
-
-# struct Vote <: AbstractRecord
-#     uuid # The uuid of the vote. 
-#     id
-#     msg 
-# end
-
-
-# struct Proposal <: AbstractProposal
-#     uuid ### just so one could find it
-#     id ### the person issueing the proposal
-#     msg
-#     options### just a list of messages
-# end
-
-function addvoters!(voters::Set,input,output)
+function addvoters!(voters::Set{ID},input,output)
     for i in input
         @assert i in voters
     end
@@ -70,7 +73,7 @@ function addvoters!(voters::Set,input,output)
 end
 
 
-function voters!(voters::Set,input,output)
+function voters!(voters::Set{ID},input,output)
     addvoters!(voters,input,output)
     
     for i in input
@@ -80,8 +83,7 @@ function voters!(voters::Set,input,output)
 end
 
 
-
-function voters!(voters::Set,messages::Vector)
+function voters!(voters::Set{ID},messages::Vector)
     for msg in messages
         if typeof(msg) <: Intent{T} where T<:AbstractID
             push!(voters,msg.document.id)
@@ -138,7 +140,7 @@ votes(messages::Vector) = filter(msg -> typeof(msg) <: Intent{T} where T<:Abstra
 # end
 
 function voters(messages,index::Integer)
-    vset = Set()
+    vset = Set{ID}()
     voters!(vset,messages[1:index])
     return vset
 end
@@ -147,13 +149,13 @@ end
 #voters(messages,option::AbstractOption) = voters(messages,option.index)
 
 function voters(braidchain)
-    vset = Set()
+    vset = Set{ID}()
     voters!(vset,braidchain)
     return vset
 end
 
 function members(braidchain)
-    mset = Set()
+    mset = Set{ID}()
     for msg in braidchain
         if typeof(msg) <: Intent{T} where T<:AbstractID
             push!(mset,msg.document.id)
@@ -163,7 +165,7 @@ function members(braidchain)
 end
 
 function members(braidchain,ca)
-    mset = Set()
+    mset = Set{ID}()
     for msg in braidchain
         if typeof(msg) <: Intent{T} where T<:AbstractID
             @assert msg.reference in ca "certificate with reference=$(msg.reference) is not valid"
@@ -174,7 +176,7 @@ function members(braidchain,ca)
 end
 
 function allvoters(braidchain)
-    vset = Set()
+    vset = Set{ID}()
     for msg in braidchain
         if typeof(msg) <: ID
             push!(vset,msg.document.id)
@@ -185,35 +187,4 @@ function allvoters(braidchain)
 
     return vset
 end
-
-# LocID
-# ExtID or GlobID, DemeID (sounds perfect)
-# It is also possible to write the functions for AbstractID. 
-
-
-
-# function count(uuid::UUID, proposal::Proposal, braidchain)
-#     com = community(uuid)
-#     return com.count(proposal,braidchain)
-# end
-
-# function Ledger(uuid::UUID)
-#     com = community(uuid)
-#     return com.Ledger()
-# end
-
-# function sync!(ledger,uuid::UUID)
-#     com = community(uuid)
-#     com.sync!(ledger)
-# end
-
-# function braidchain(ledger,uuid::UUID)
-#     com = community(uuid)
-#     return com.braidchain(ledger)
-# end
-
-# braidchain(uuid::UUID) = braidchain(Ledger(uuid),uuid)
-
-
-#export voters!, Braid, Vote, Ticket
 

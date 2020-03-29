@@ -36,8 +36,6 @@ Base.:(==)(a::ID,b::ID) = a.id==b.id
 Base.hash(a::ID,h::UInt) = hash(a.id,hash(:ID,h))
 Base.in(a::ID,b::ID) = a==b
 
-#Base.iterate(id::ID) = (id, nothing)
-
 struct DemeID <: AbstractID
     uuid::UUID
     id::ID
@@ -53,16 +51,12 @@ Base.hash(a::DemeID,h::UInt) = hash(a.id,hash(a.uuid,hash(:DemeID, h)))
 Base.in(a::DemeID,b::DemeID) = a==b
 
 
-#Base.iterate(id::DemeID) = (id, nothing)
-
 struct DemeSpec
     uuid::UUID
     name::AbstractString
     maintainer::ID  # ::BigInt
     crypto::Symbol
     cryptodep::UUID
-    #crypto::Union{Symbol,Expr} 
-    #deps::Union{UUID,Vector{UUID}} # libraries to initialize Signatures type. In case when crypto is a symbol the libraries are imported into the working namespace (Notary and Cypher).
     cypherconfig::Symbol
     cypherdep::UUID
     peacefounder::UUID # Everything else appart from signature stuff
@@ -152,9 +146,21 @@ struct Consensus{T}
 end
 
 ### 
-#const ID = Intent{T} where T <: AbstractID 
-const Braid = Consensus{T} where T <: AbstractBraid
-const Proposal = Intent{T} where T <: AbstractProposal
-const Vote = Intent{T} where T <: AbstractVote
+# const Braid = Consensus{T} where T <: AbstractBraid
+# const Proposal = Intent{T} where T <: AbstractProposal
+# const Vote = Intent{T} where T <: AbstractVote
 
+struct BraidChain
+    records
+end
 
+struct Profile
+    name::AbstractString
+    date::Union{AbstractString,Nothing}
+    about::Union{AbstractString,Nothing}
+    homepage::Union{AbstractString,Nothing}
+    email::Union{AbstractString,Nothing}
+    facebook::Union{AbstractString,Nothing}
+    twitter::Union{AbstractString,Nothing}
+    github::Union{AbstractString,Nothing}
+end

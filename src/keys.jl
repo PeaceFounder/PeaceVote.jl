@@ -64,10 +64,7 @@ end
 
 ### I could actually define a constructor for New so it would construct the type.
 
-#KeyChain(deme::Deme,account::AbstractString) = KeyChain(deme.spec.uuid,deme.notary,account)
 KeyChain(deme::Deme) = KeyChain(deme,"")
 
-    #com = community(member.uuid)
-    #com.propose(msg, options, member)
 
 

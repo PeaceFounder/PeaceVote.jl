@@ -13,21 +13,27 @@ demefile(uuid::UUID) = CONFIG_DIR * "/demes/$uuid"
 keydir(uuid::UUID) = CONFIG_DIR * "/keys/$uuid/"
 datadir(uuid::UUID) = CONFIG_DIR * "/data/$uuid/"
 
-
 include("utils.jl")
 include("types.jl")
 include("userapi.jl")
 include("braidchain.jl")
 include("keys.jl")
 include("deme.jl")
-#include("evalnotaries.jl")
+include("profile.jl")
 
-### Some methods necessary 
 
-###
+# Keys would contain
+export Signer, KeyChain
+# Demes would contain
+export DemeSpec, Notary, Cypher, CypherSuite, Deme, Ledger, ID, DemeID
+# Profiles would contain
+export Profile
 
-export DemeSpec, Notary, Cypher, CypherSuite, Deme, Ledger, save, ID, DemeID
+# BraidChains would then contain
 export sync!, register, braid!, vote, propose, braidchain, count
-export Signer, KeyChain, Envelope, Certificate, Contract, Consensus, Intent
+export Envelope, Certificate, Contract, Consensus, Intent
 export proposals
+
+export save, load
+
 end # module
