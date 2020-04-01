@@ -1,3 +1,18 @@
+module Profiles
+
+using Pkg.TOML
+import Base.Dict
+
+struct Profile
+    name::AbstractString
+    date::Union{AbstractString,Nothing}
+    about::Union{AbstractString,Nothing}
+    homepage::Union{AbstractString,Nothing}
+    email::Union{AbstractString,Nothing}
+    facebook::Union{AbstractString,Nothing}
+    twitter::Union{AbstractString,Nothing}
+    github::Union{AbstractString,Nothing}
+end
 
 function Dict(profile::Profile)
     dict = Dict()
@@ -48,3 +63,6 @@ function Profile(fname::AbstractString)
 end
 
 Profile() = Profile(CONFIG_DIR * "/Profile.toml")
+
+
+end

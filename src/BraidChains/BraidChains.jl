@@ -1,46 +1,9 @@
-Certificate(x,signer::AbstractSigner) = Certificate(x,Dict(signer.sign("$x")))
+module BraidChains
 
-Envelope(data,signer::AbstractSigner) = Envelope(signer.uuid,Certificate(data,signer))
+using ..DemeNet: ID, AbstractID, Notary, Contract, Certificate, Intent, Consensus
+using ..Plugins: AbstractChain, AbstractProposal, AbstractVote, AbstractBraid, load
 
-verify(cert::Certificate,notary::Notary) = notary.verify("$(cert.document)",notary.Signature(cert.signature)) 
-
-function verify(envelope::Envelope)
-    demespec = DemeSpec(envelope.uuid)
-    notary = Notary(demespec)
-    id = verify(envelope.contract,notary)
-    return DemeID(envelope.uuid,id)
-end
-
-
-function Intent(envelope::Envelope) 
-    demespec = DemeSpec(envelope.uuid)
-    notary = Notary(demespec)
-
-    contract = envelope.contract
-    id = notary.verify("$(contract.document)",notary.Signature(contract.signature)) 
-
-    ref = DemeID(envelope.uuid,id)
-    return Intent(document,ref)
-end
-
-function Intent(contract::Certificate,notary::Notary)
-    signature = notary.Signature(contract.signature)
-    id = notary.verify("$(contract.document)",signature) 
-    return Intent(contract.document,id)
-end    
-
-function Consensus(contract::Contract,notary::Notary) 
-    doc = "$(contract.document)"
-    refs = ID[]
-    for s in contract.signatures
-        signature = notary.Signature(s)
-        id = notary.verify(doc,signature)
-        push!(refs,id)
-    end
-    return Consensus(contract.document,refs)
-end
-
-function BraidChain(chain::Vector{Union{Certificate,Contract}},notary::Notary)
+function attest(chain::Vector{Union{Certificate,Contract}},notary::Notary)
     messages = []
     for record in chain
         if typeof(record) <: Certificate
@@ -54,12 +17,10 @@ function BraidChain(chain::Vector{Union{Certificate,Contract}},notary::Notary)
         end
     end
     
-    return BraidChain(messages)
+    return messages
 end
 
-
-BraidChain(ledger::AbstractLedger,notary::Notary) = BraidChain(load(ledger),notary)
-BraidChain(deme::Deme) = BraidChain(deme.ledger,deme.notary)
+attest(chain::AbstractChain) = attest(load(chain.ledger),chain.deme.notary)
 
 
 function addvoters!(voters::Set{ID},input,output)
@@ -188,3 +149,4 @@ function allvoters(braidchain)
     return vset
 end
 
+end

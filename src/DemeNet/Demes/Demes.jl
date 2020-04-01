@@ -1,14 +1,24 @@
-# Just a quick fix
-using Pkg.TOML
-using Base: UUID
-
-_uuid(name::AbstractString) = UUID(Base.hash(name))
-
-function add(spec::DemeSpec)
-    error("Not implemented")
-end
+module Demes
 
 import Base.Dict
+using Base: UUID
+using Pkg.TOML
+using Pkg.Types: Context
+using ..Types: ID, uuid, demefile
+import ..Keys: Signer
+import ..Plugins: Notary, Cypher
+
+struct DemeSpec
+    uuid::UUID
+    name::AbstractString
+    maintainer::ID  # ::BigInt
+    crypto::Symbol
+    cryptodep::UUID
+    cypherconfig::Symbol
+    cypherdep::UUID
+    peacefounder::UUID # Everything else appart from signature stuff
+end
+
 function Dict(demespec::DemeSpec)
     config = Dict()
 
@@ -52,6 +62,12 @@ function DemeSpec(dict::Dict)
     DemeSpec(uuid,name,maintainer,crypto,cryptodep,cypherconfig,cypherdep,peacefounder)
 end
 
+_uuid(name::AbstractString) = UUID(Base.hash(name))
+
+function add(spec::DemeSpec)
+    error("Not implemented")
+end
+
 #import Base.save
 function save(fname::AbstractString,deme::DemeSpec)
     mkpath(dirname(fname))
@@ -70,7 +86,6 @@ function DemeSpec(uuid::UUID)
     DemeSpec(dict)
 end
 
-
 function DemeSpec(name::AbstractString,crypto::Symbol,cryptodep::Symbol,cypherconfig::Symbol,cypherdep::Symbol,peacefounder::Symbol)#,notary::Notary)
     ctx = Context()
     #deps_uuid = UUID[uuid(ctx,dep) for dep in deps]
@@ -84,67 +99,45 @@ function DemeSpec(name::AbstractString,crypto::Symbol,cryptodep::Symbol,cypherco
     DemeSpec(demeuuid,name,maintainer.id,crypto,cryptodep_uuid,cypherconfig,cypherdep_uuid,peacefounder_uuid)
 end
 
-DemeType(uuid::UUID) = Deme{uuid.value}
-DemeType(m::Module) = DemeType(uuid(m))
+Notary(metadata::DemeSpec) = Notary(metadata.cryptodep,metadata.crypto)
+Cypher(metadata::DemeSpec) = Cypher(metadata.cypherdep,metadata.cypherconfig)
+
+struct Deme
+    spec::DemeSpec
+    notary::Notary
+    cypher::Cypher
+    #ledger ### This one is used by peacefounder to construct configuration
+end
+
+Signer(deme::Deme,account::AbstractString) = Signer(deme.spec.uuid,deme.notary,account)
+# I could use the [] brackets for defining a proper type!!!
+
+#DemeType(uuid::UUID) = 
+#DemeType(m::Module) = DemeType(uuid(m))
 
 function Deme(spec::DemeSpec,notary::Notary,cypher::Cypher,ledger)
     ThisDeme = DemeType(spec.peacefounder)
     ThisDeme(spec,notary,cypher,ledger)
 end
 
-function Deme(spec::DemeSpec;ledger=true)
+function Deme(spec::DemeSpec) #;ledger=true)
     notary = Notary(spec)
     cypher = Cypher(spec)
-    ThisDeme = DemeType(spec.peacefounder)
+    # ThisDeme = Deme{spec.peacefounder.value}
 
-    if ledger==true
-        ledger_ = Ledger(ThisDeme,spec.uuid)
-    else
-        ledger_ = nothing
-    end
-    ThisDeme(spec,notary,cypher,ledger_)
+    # if ledger==true
+    #     ledger_ = Ledger(ThisDeme,spec.uuid)
+    # else
+    #     ledger_ = nothing
+    # end
+    # ThisDeme(spec,notary,cypher,ledger_)
+    return Deme(spec,notary,cypher)
 end
 
 Deme(uuid::UUID) = Deme(DemeSpec(uuid))
-
-### In this way the working namespace would not need to know anything about DemeType. 
-
-### There still would be no possibility to dispatch accuratelly if namespace is polluted
 
 function info(deme::Deme)
     @show deme
 end
 
-### Makes a ticket string which can be used by the register method
-function ticket(deme::DemeSpec,port,tooken::Int)
-    config = Dict("demespec"=>Dict(deme),"port"=>Dict(port),"tooken"=>tooken)
-    io = IOBuffer()
-    TOML.print(io, config)
-    return String(take!(io))
 end
-
-### To use this function one is supposed to know
-### How to create a identity
-
-function register(invite::Dict,profile::Profile; account="")
-
-    demespec = DemeSpec(invite["demespec"])
-    save(demespec)
-
-    deme = Deme(demespec)
-    if haskey(invite,"port")
-        sync!(deme,invite["port"]) 
-    end
-
-    tooken = invite["tooken"]
-    keychain = KeyChain(deme,account)
-    id = keychain.member.id
-    register(deme,profile,id,tooken)
-end
-
-register(invite::AbstractString,profile::Profile; kwargs...) = register(TOML.parse(invite),profile; kwargs...)
-
-#tooken = dict["tooken"]
-#register(deme,id,tooken)
-
-### Definitions which must be implemented by PeaceFounder

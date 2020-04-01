@@ -1,39 +1,16 @@
 module PeaceVote
 
-using Pkg.Types: Context
-using Base: UUID
+### This is where one would use 
+include("DemeNet/DemeNet.jl")
 
-const CONFIG_DIR = homedir() * "/.peacevote/"
+include("Plugins/Plugins.jl")
+include("BraidChains/BraidChains.jl")
+include("KeyChains/KeyChains.jl")
 
-function setconfigdir(dir::String)
-    global CONFIG_DIR = dir
-end
+import .KeyChains: KeyChain
+import .Plugins: sync!, load, count
+import .KeyChains: register, braid!, vote, propose
 
-demefile(uuid::UUID) = CONFIG_DIR * "/demes/$uuid"
-keydir(uuid::UUID) = CONFIG_DIR * "/keys/$uuid/"
-datadir(uuid::UUID) = CONFIG_DIR * "/data/$uuid/"
-
-include("utils.jl")
-include("types.jl")
-include("userapi.jl")
-include("braidchain.jl")
-include("keys.jl")
-include("deme.jl")
-include("profile.jl")
-
-
-# Keys would contain
-export Signer, KeyChain
-# Demes would contain
-export DemeSpec, Notary, Cypher, CypherSuite, Deme, Ledger, ID, DemeID
-# Profiles would contain
-export Profile
-
-# BraidChains would then contain
-export sync!, register, braid!, vote, propose, braidchain, count
-export Envelope, Certificate, Contract, Consensus, Intent
-export proposals
-
-export save, load
+export ID, DemeID, DemeSpec, Deme, KeyChain, sync!, load, count, register, braid!, vote, propose
 
 end # module
