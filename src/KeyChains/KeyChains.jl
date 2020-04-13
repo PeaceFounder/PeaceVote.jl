@@ -1,7 +1,7 @@
 module KeyChains
 
 using Pkg.TOML
-using ..DemeNet: Deme, DemeSpec, Signer, ID, DemeID, Profile, keydir
+using DemeNet: Deme, DemeSpec, Signer, ID, DemeID, Profile, keydir
 using ..BraidChains: voters, attest
 using ..Plugins: AbstractVote, AbstractProposal, AbstractChain, load
 

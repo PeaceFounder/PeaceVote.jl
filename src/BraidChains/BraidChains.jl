@@ -1,6 +1,6 @@
 module BraidChains
 
-using ..DemeNet: ID, AbstractID, Notary, Contract, Certificate, Intent, Consensus
+using DemeNet: ID, AbstractID, Notary, Contract, Certificate, Intent, Consensus
 using ..Plugins: AbstractChain, AbstractProposal, AbstractVote, AbstractBraid, load
 
 function attest(chain::Vector{Union{Certificate,Contract}},notary::Notary)
@@ -46,8 +46,8 @@ end
 
 function voters!(voters::Set{ID},messages::Vector)
     for msg in messages
-        if typeof(msg) <: Intent{T} where T<:AbstractID
-            push!(voters,msg.document.id)
+        if typeof(msg)==Intent{ID} 
+            push!(voters,msg.document)
         elseif typeof(msg) <: Consensus{T} where T<:AbstractBraid
             input = unique(msg.references)
             output = unique(msg.document.ids)

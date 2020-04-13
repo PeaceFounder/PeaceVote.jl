@@ -1,7 +1,7 @@
 module Plugins
 
 using Base: UUID
-using ..DemeNet: Signer, Certificate, Deme, Profile, AbstractID, AbstractPlugin
+using DemeNet: Signer, Certificate, Deme, Profile, AbstractID, AbstractPlugin
 
 ################## The API of PeaceFounder #################
 

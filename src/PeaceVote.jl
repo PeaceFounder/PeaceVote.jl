@@ -1,8 +1,5 @@
 module PeaceVote
 
-### This is where one would use 
-include("DemeNet/DemeNet.jl")
-
 include("Plugins/Plugins.jl")
 include("BraidChains/BraidChains.jl")
 include("KeyChains/KeyChains.jl")
