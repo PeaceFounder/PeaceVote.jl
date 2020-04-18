@@ -2,6 +2,8 @@ module KeyChains
 
 using Pkg.TOML
 using DemeNet: Deme, DemeSpec, Signer, ID, DemeID, Profile, keydir
+import DemeNet: Certificate
+
 using ..BraidChains: voters, attest
 using ..Plugins: AbstractVote, AbstractProposal, AbstractChain, load
 
@@ -45,19 +47,19 @@ KeyChain(deme::Deme) = KeyChain(deme,"")
 
 
 ### I could use oldvoter.id as filename
-function braid!(chain::AbstractChain,kc::KeyChain)
-    if length(kc.signers)==0 
-        oldvoter = kc.member
-    else
-        oldvoter = kc.signers[end]
-    end
+# function braid!(chain::AbstractChain,kc::KeyChain)
+#     if length(kc.signers)==0 
+#         oldvoter = kc.member
+#     else
+#         oldvoter = kc.signers[end]
+#     end
 
-    newvoter = Signer(kc.deme,kc.account * "/voters/$(string(oldvoter.id))")
+#     newvoter = Signer(kc.deme,kc.account * "/voters/$(string(oldvoter.id))")
 
-    braid!(chain,newvoter,oldvoter)
-    # if fails, delete the newvoter
-    push!(kc.signers,newvoter)
-end
+#     braid!(chain,newvoter,oldvoter)
+#     # if fails, delete the newvoter
+#     push!(kc.signers,newvoter)
+# end
 
 #braid!(kc::New{KeyChain}) = invokelatest(kc->braid!(kc),kc.invoke)
 
@@ -71,13 +73,18 @@ function voter(kc::KeyChain,vset::Set)
     end
 end
 
-function vote(chain::AbstractChain,option::AbstractVote,keychain::KeyChain)
+### In place of this one I need to add Certificate methods for KeyChain
+### The chain part could be omitted by storing the pid with the keys.
+function Certificate(option::AbstractVote,chain::AbstractChain,keychain::KeyChain)
     loadedledger = load(chain)
     messages = attest(loadedledger,keychain.deme.notary)
     vset = voters(messages[1:option.pid])
     v = voter(keychain,vset)
-    vote(chain,option,v)
+    return Certificate(option,v)
+    #vote(chain,option,v)
 end
+
+Certificate(stuff::Union{AbstractProposal,ID},keychain::KeyChain) = Certificate(stuff,keychain.member)
 
 ### This module deals with participation to the Deme
 
@@ -86,7 +93,7 @@ end
 ### Makes a ticket string which can be used by the register method
 
 
-propose(chain::AbstractChain,proposal::AbstractProposal,kc::KeyChain) = propose(chain,proposal,kc.member)
+#propose(chain::AbstractChain,proposal::AbstractProposal,kc::KeyChain) = propose(chain,proposal,kc.member)
 
 
 end
