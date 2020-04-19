@@ -5,9 +5,12 @@ using DemeNet: Deme, DemeSpec, Signer, ID, DemeID, Profile, keydir
 import DemeNet: Certificate
 
 using ..BraidChains: voters, attest
+
+
 using ..Plugins: AbstractVote, AbstractProposal, AbstractChain, load
 
-import ..Plugins: register, braid!, vote, propose
+import ..BraidChains: braid!
+#import ..Plugins: register, braid!, vote, propose
 
 struct KeyChain 
     deme::Deme ### This is necessary to make braid! function obvious  
@@ -73,6 +76,9 @@ function voter(kc::KeyChain,vset::Set)
     end
 end
 
+
+Certificate(stuff::Union{AbstractProposal,ID},keychain::KeyChain) = Certificate(stuff,keychain.member)
+
 ### In place of this one I need to add Certificate methods for KeyChain
 ### The chain part could be omitted by storing the pid with the keys.
 function Certificate(option::AbstractVote,chain::AbstractChain,keychain::KeyChain)
@@ -84,7 +90,25 @@ function Certificate(option::AbstractVote,chain::AbstractChain,keychain::KeyChai
     #vote(chain,option,v)
 end
 
-Certificate(stuff::Union{AbstractProposal,ID},keychain::KeyChain) = Certificate(stuff,keychain.member)
+
+
+import PeaceVote.Plugins: braid!
+function braid!(chain::AbstractChain,kc::KeyChain)
+    config = chain.config
+
+    if length(kc.signers)==0 
+        oldvoter = kc.member
+    else
+        oldvoter = kc.signers[end]
+    end
+
+    newvoter = Signer(kc.deme,kc.account * "/voters/$(string(oldvoter.id))")
+
+    braid!(chain,newvoter,oldvoter)
+    # if fails, delete the newvoter
+    push!(kc.signers,newvoter)
+end
+
 
 ### This module deals with participation to the Deme
 

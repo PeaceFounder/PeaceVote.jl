@@ -6,8 +6,8 @@ include("KeyChains/KeyChains.jl")
 
 import .KeyChains: KeyChain
 import .Plugins: sync!, load, count
-import .KeyChains: register, braid!, vote, propose
+import .KeyChains: braid!
 
-export ID, DemeID, DemeSpec, Deme, KeyChain, sync!, load, count, register, braid!, vote, propose
+export ID, DemeID, DemeSpec, Deme, KeyChain, sync!, load, count, braid!
 
 end # module
