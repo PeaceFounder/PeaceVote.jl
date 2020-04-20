@@ -1,7 +1,9 @@
 module BraidChains
 
 using DemeNet: ID, Signer, Deme, Signer
-using PeaceVote.Plugins: AbstractChain
+#using PeaceVote.Plugins: AbstractChain
+
+using PeaceVote: AbstractChain
 
 
 include("Types/Types.jl")
@@ -14,7 +16,7 @@ include("Recorders/Recorders.jl")
 import .Types: Proposal, Vote
 import .Braiders: braid!, BraiderConfig, Braider, Mixer
 import .Recorders: RecorderConfig, Recorder, record
-import .Ledgers: Ledger, record!, getrecord, readbootrecord, writebootrecord
+import .Ledgers: Ledger, record!, getrecord, readbootrecord, writebootrecord, load
 import .Analysis: normalcount, voters, attest, members, proposals ### A counting strategy depends on the proposal, thus normalcount could be replaceed just with count
 
 struct BraidChainConfig{T} # Perhaps BraidChainRemote
@@ -33,6 +35,7 @@ end
 
 BraidChain(config::BraidChainConfig,deme::Deme) = BraidChain(config,deme,Ledger(deme.spec.uuid))
 
+import PeaceVote: record
 record(config::BraidChainConfig,data) = record(config.recorder,data)
 record(chain::BraidChain,data) = record(chain.config,data)
 
@@ -58,14 +61,13 @@ function BraidChainServer(chain::BraidChain,server::Signer)
     return BraidChainServer(mixer,synchronizer,braider,recorder)
 end
 
-import .Ledgers
-import PeaceVote.Plugins: load
-load(chain::BraidChain) = Ledgers.load(chain.ledger)
+load(chain::BraidChain) = load(chain.ledger)
 
-import PeaceVote.Plugins: sync!
-sync!(deme::BraidChain,syncport) = Ledgers.sync!(deme.ledger,syncport)
+import PeaceVote: sync!
+sync!(chain::BraidChain,syncport) = Ledgers.sync!(chain.ledger,syncport)
+sync!(chain::BraidChain,config::BraidChainConfig) = sync!(chain,config.syncport)
 
-import Base.count
+import PeaceVote: count
 count(index::Int,chain::BraidChain) = normalcount(index,chain.deme,chain.ledger)
 
 braid!(chain::BraidChain,newvoter::Signer,oldvoter::Signer) = braid!(chain.config.braider,chain.deme,newvoter,oldvoter)

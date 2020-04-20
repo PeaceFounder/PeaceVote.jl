@@ -1,16 +1,10 @@
 module KeyChains
 
 using Pkg.TOML
-using DemeNet: Deme, DemeSpec, Signer, ID, DemeID, Profile, keydir
-import DemeNet: Certificate
+using DemeNet: Deme, DemeSpec, Signer, ID, DemeID, Profile, keydir, Certificate
+using PeaceVote: AbstractVote, AbstractProposal, AbstractChain, load, attest, voters
 
-using ..BraidChains: voters, attest
-
-
-using ..Plugins: AbstractVote, AbstractProposal, AbstractChain, load
-
-import ..BraidChains: braid!
-#import ..Plugins: register, braid!, vote, propose
+import PeaceVote: braid!
 
 struct KeyChain 
     deme::Deme ### This is necessary to make braid! function obvious  
@@ -48,24 +42,6 @@ end
 
 KeyChain(deme::Deme) = KeyChain(deme,"")
 
-
-### I could use oldvoter.id as filename
-# function braid!(chain::AbstractChain,kc::KeyChain)
-#     if length(kc.signers)==0 
-#         oldvoter = kc.member
-#     else
-#         oldvoter = kc.signers[end]
-#     end
-
-#     newvoter = Signer(kc.deme,kc.account * "/voters/$(string(oldvoter.id))")
-
-#     braid!(chain,newvoter,oldvoter)
-#     # if fails, delete the newvoter
-#     push!(kc.signers,newvoter)
-# end
-
-#braid!(kc::New{KeyChain}) = invokelatest(kc->braid!(kc),kc.invoke)
-
 voter(kc::KeyChain) = kc.signers[end]
 
 function voter(kc::KeyChain,vset::Set)
@@ -75,7 +51,6 @@ function voter(kc::KeyChain,vset::Set)
         end
     end
 end
-
 
 Certificate(stuff::Union{AbstractProposal,ID},keychain::KeyChain) = Certificate(stuff,keychain.member)
 
@@ -87,12 +62,8 @@ function Certificate(option::AbstractVote,chain::AbstractChain,keychain::KeyChai
     vset = voters(messages[1:option.pid])
     v = voter(keychain,vset)
     return Certificate(option,v)
-    #vote(chain,option,v)
 end
 
-
-
-import PeaceVote.Plugins: braid!
 function braid!(chain::AbstractChain,kc::KeyChain)
     config = chain.config
 
@@ -108,16 +79,5 @@ function braid!(chain::AbstractChain,kc::KeyChain)
     # if fails, delete the newvoter
     push!(kc.signers,newvoter)
 end
-
-
-### This module deals with participation to the Deme
-
-### This part I could then delegate to Certifiers
-
-### Makes a ticket string which can be used by the register method
-
-
-#propose(chain::AbstractChain,proposal::AbstractProposal,kc::KeyChain) = propose(chain,proposal,kc.member)
-
 
 end

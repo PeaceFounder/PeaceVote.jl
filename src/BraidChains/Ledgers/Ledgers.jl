@@ -1,25 +1,19 @@
 module Ledgers
 
-#using ..Types: AbstractLedger
-#using ..DataFormat
-
 using Base: UUID
 using DemeNet: datadir
 
-#import ..Types: record!, records
-
 import Synchronizers
 using Synchronizers: Record
+
+import PeaceVote: load
 
 const SyncLedger = Synchronizers.Ledger
 
 abstract type AbstractLedger end
 
-### This part needs to be improved
-#load(ledger::AbstractLedger) = error("Not impl") 
 record!(ledger::AbstractLedger,fname::String,bytes::Vector{UInt8}) = error("Not impl")
 records(ledger::AbstractLedger) = error("Not impl")
-
 
 struct Ledger <: AbstractLedger
     dir::AbstractString
@@ -62,28 +56,79 @@ sync!(ledger::Ledger,syncport) = Synchronizers.sync(Synchronizers.Synchronizer(s
 
 import DemeNet: serialize, deserialize
 
-### An easy way to deal with stuff
-#configfname(uuid::UUID) = datadir(uuid) * "/ledger/PeaceFounder.toml" # In future could be PeaceFounder.toml
-
 using Pkg.TOML
 using Base: UUID
-#using ..Types: SystemConfig, CertifierConfig, BraiderConfig, RecorderConfig, Port, AddressRecord, ip, PFID, Vote, Proposal, Braid, BraidChain
 using ..Types: Vote, Proposal, Braid
 using DemeNet: Notary, DemeSpec, Deme, datadir, Signer, Certificate, Contract, Intent, Consensus, Envelope, ID, DemeID, AbstractID
 
 
-include("ledgers.jl")
+deserialize(record::Record,type::Type) = deserialize(IOBuffer(record.data),type)
+
+function load(ledger::AbstractLedger)
+    chain = Union{Certificate,Contract}[]
+
+    for record in records(ledger)
+        if dirname(record)=="members"
+
+            id = deserialize(IOBuffer(record.data),Certificate{ID})
+            push!(chain,id)
+
+        elseif dirname(record)=="braids"
+
+            braid = deserialize(IOBuffer(record.data),Contract{Braid})
+            push!(chain,braid)
+
+        elseif dirname(record)=="votes"
+
+            vote = deserialize(IOBuffer(record.data),Certificate{Vote})
+            push!(chain,vote)
+
+        elseif dirname(record)=="proposals"
+
+            proposal = deserialize(IOBuffer(record.data),Certificate{Proposal})
+            push!(chain,proposal)
+
+        end
+    end
+    return chain
+end
+
+function getrecord(ledger::AbstractLedger,fname::AbstractString)
+    for record in records(ledger)
+        if record.fname == fname
+            return record
+        end
+    end
+end
+
+
+serialize(ledger::AbstractLedger,data,fname::AbstractString) = record!(ledger,fname,binary(data))
+
+
+serialize(ledger::AbstractLedger,id::Certificate{ID}) = record!(ledger,"members/$(id.document.id)",binary(id))
+
+function serialize(ledger::AbstractLedger,vote::Certificate{Vote}) 
+    pid = vote.document.pid
+    uuid = hash(vote.signature)
+    record!(ledger,"votes/$pid-$uuid",binary(vote)) ### We may also use length of the ledger 
+end
+
+function serialize(ledger::AbstractLedger,proposal::Certificate{Proposal})
+    msg = proposal.document.msg
+    propid = hash(msg)
+    uuid = hash(proposal.signature)
+    record!(ledger,"proposals/$propid-$uuid",binary(proposal))
+end
+
+function serialize(ledger::AbstractLedger,braid::Contract{Braid})
+    uuid = hash(braid.signatures)
+    record!(ledger,"braids/$uuid",binary(braid))
+end
 
 
 function writebootrecord(deme::Deme,config)
     fname = "config/" * string(0,base=16,pad=8)
     bytes = binary(config)
-    # if length(ledger.ledger.records)==0
-    #     record!(ledger,fname,bytes)
-    # else        
-    #     ledger.ledger.records[1] = Record(fname,bytes)
-    # end
-    #path = ledger.dir * "/" * fname path = ledger.dir * "/" * fname 
     path = datadir(deme.spec.uuid) * "/ledger/" * fname 
     mkpath(dirname(path))
     write(path, bytes)
@@ -93,9 +138,6 @@ function readbootrecord(ledger::Ledger,type::Type)
     rec = ledger.ledger.records[1]
     deserialize(rec,type)
 end
-
-# Theese methods belong to outter scope where SystemConfig is being defined
-
 
 export Ledger, record!, dirname, basename, serve
 

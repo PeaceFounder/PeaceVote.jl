@@ -5,10 +5,9 @@ module Braiders
 import SynchronicBallot
 using SynchronicBallot: SocketConfig
 using DemeNet: DemeSpec, Notary, Cypher, Signer, Deme, Contract, Certificate, ID, DemeID, DHsym, DHasym
-using PeaceVote.Plugins: AbstractChain
+import PeaceVote.braid!
+import ..Types: Braid ### The Braid could be defined here
 
-#using ..Types: BraiderConfig
-import ..Types: Braid
 
 using Pkg.TOML
 
@@ -112,7 +111,6 @@ function Braider(deme::Deme,signer::Signer)
     Braider(braider,deme,signer)
 end
 
-import PeaceVote.braid!
 
 function braid!(config::BraiderConfig,deme::Deme,mixerdeme::Deme,voter::Signer,signer::Signer)
     
@@ -136,12 +134,6 @@ function braid!(config::BraiderConfig,deme::Deme,voter::Signer,signer::Signer)
 
     braid!(config,deme,mixerdeme,voter,signer)
 end
-
-# function braid!(deme::AbstractChain,voter::Signer,signer::Signer)
-#     systemconfig = SystemConfig(deme)
-#     config = systemconfig.braider
-#     braid!(config,deme,voter,signer)
-# end
 
 export Mixer, Braider, braid!
 

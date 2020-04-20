@@ -1,23 +1,22 @@
 name = "PeaceVote"
 uuid = "129db535-0459-46ad-8d3d-b1fb8f318c74"
 authors = ["akels <akels14@gmail.com>"]
-version = "0.3.1"
+version = "0.3.2"
 
 [deps]
 DemeNet = "311d44f8-95d5-40c8-b71c-a916d7747227"
-Pkg = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
 DiffieHellman = "0e61fee8-20a4-4374-8233-5198f28d9d66"
+Pkg = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
+Sockets = "6462fe0b-24de-5631-8697-dd941f90decc"
 SynchronicBallot = "c4fd2470-c9f5-491f-b4e2-53b9059945a5"
 Synchronizers = "9279c0cf-0ddb-4a8a-93c9-19d312620a08"
-Sockets = "6462fe0b-24de-5631-8697-dd941f90decc"
 
 [compat]
 DemeNet = "^0.1.2"
-julia = "1"
 DiffieHellman = "^0.4"
 SynchronicBallot = "^0.3"
 Synchronizers = "^0.1"
-
+julia = "1"
 
 [extras]
 PeaceCypher = "7743456c-e0c5-4477-a2b6-196c240b0368"

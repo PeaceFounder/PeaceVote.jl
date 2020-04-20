@@ -1,12 +1,10 @@
 module Types
 
-
 using DemeNet: Certificate, Contract, Intent, Consensus, AbstractID, ID, DemeID, Deme
-using PeaceVote.Plugins: AbstractVote, AbstractProposal, AbstractBraid
+using PeaceVote: AbstractVote, AbstractProposal, AbstractBraid
 using Base: UUID
 
 import Base.Dict
-
 
 struct Vote <: AbstractVote
     pid::Int ### One gets it from a BraidChain loking into a sealed proposal

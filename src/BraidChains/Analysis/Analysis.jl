@@ -1,18 +1,12 @@
 module Analysis
 
-using DemeNet: Intent, Deme
-#using PeaceVote.BraidChains: voters!, ID, attest
-using PeaceVote.Plugins: AbstractProposal, AbstractVote
-using ..Types: Proposal, Vote #, BraidChain
+using DemeNet: Intent, Deme, ID, AbstractID, Notary, Contract, Certificate, Intent, Consensus
+using PeaceVote: AbstractChain, AbstractProposal, AbstractVote, AbstractBraid
+
+using ..Types: Proposal, Vote 
 using ..Ledgers: load, Ledger
 
-### One still needs to find the proposal with in the chain. For that additional uniqness property is still valuable.
-
-# function normalcount(proposal::Proposal,voters::Set{ID},messages)
-# end
-
-using DemeNet: ID, AbstractID, Notary, Contract, Certificate, Intent, Consensus
-using PeaceVote.Plugins: AbstractChain, AbstractProposal, AbstractVote, AbstractBraid, load
+import PeaceVote: attest, voters
 
 function attest(chain::Vector{Union{Certificate,Contract}},notary::Notary)
     messages = []
@@ -30,8 +24,6 @@ function attest(chain::Vector{Union{Certificate,Contract}},notary::Notary)
     
     return messages
 end
-
-#attest(chain::AbstractChain) = attest(load(chain.ledger),chain.deme.notary)
 
 function addvoters!(voters::Set{ID},input,output)
     for i in input
@@ -158,9 +150,6 @@ function allvoters(braidchain)
 
     return vset
 end
-
-
-
 
 
 ### Need to improve code so it would dispatch on proposal type at the particular index.
