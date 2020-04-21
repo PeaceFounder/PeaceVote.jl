@@ -48,7 +48,7 @@ uuid = "8bb1440f-4735-579b-a4ab-409b98df4dab"
 
 [[DemeNet]]
 deps = ["DiffieHellman", "Pkg"]
-path = "../DemeNet"
+git-tree-sha1 = "2c390abc6101ed348bb1a4a6f953fd2c1a11df57"
 uuid = "311d44f8-95d5-40c8-b71c-a916d7747227"
 version = "0.1.2"
 
