@@ -2,7 +2,7 @@ using DemeNet: Signer, DemeSpec, Deme, save, Consensus, DemeID
 using PeaceVote.BraidChains.Braiders: BraiderConfig, Braider, Mixer, braid!
 using PeaceCypher
 
-demespec = DemeSpec("PeaceDeme",:default,:PeaceCypher,:default,:PeaceCypher,:PeaceFounder)
+demespec = DemeSpec("PeaceDeme",:default,:PeaceCypher,:default,:PeaceCypher,:PeaceCypher)
 save(demespec) ### Necessary to connect with Mixer
 
 deme = Deme(demespec)
