@@ -14,7 +14,7 @@ end
 
 ### Configuration ###
 
-demespec = DemeSpec("PeaceDeme",:default,:PeaceCypher,:default,:PeaceCypher,:PeaceCypher)
+demespec = DemeSpec("PeaceDeme",:default,:PeaceCypher,:default,:PeaceCypher,:PeaceVote)
 save(demespec) ### Necessary to connect with Mixer
 uuid = demespec.uuid
 deme = Deme(demespec)

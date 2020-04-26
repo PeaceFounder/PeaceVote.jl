@@ -64,8 +64,10 @@ end
 load(chain::BraidChain) = load(chain.ledger)
 
 import PeaceVote: sync!
-sync!(chain::BraidChain,syncport) = Ledgers.sync!(chain.ledger,syncport)
-sync!(chain::BraidChain,config::BraidChainConfig) = sync!(chain,config.syncport)
+#sync!(chain::BraidChain,syncport) = Ledgers.sync!(chain.ledger,syncport)
+#sync!(chain::BraidChain,config::BraidChainConfig) = sync!(chain,config.syncport)
+
+sync!(chain::BraidChain) = Ledgers.sync!(chain.ledger,chain.config.syncport)
 
 import PeaceVote: count
 count(index::Int,chain::BraidChain) = normalcount(index,chain.deme,chain.ledger)

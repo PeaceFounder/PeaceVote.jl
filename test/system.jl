@@ -9,7 +9,7 @@ end
 
 ### Setting up Deme with PeaceVote ###
 
-demespec = DemeSpec("PeaceDeme",:default,:PeaceCypher,:default,:PeaceCypher,:PeaceCypher)
+demespec = DemeSpec("PeaceDeme",:default,:PeaceCypher,:default,:PeaceCypher,:PeaceVote)
 save(demespec) ### Necessary to connect with Mixer
 uuid = demespec.uuid
 deme = Deme(demespec)
@@ -90,5 +90,5 @@ sleep(1)
 
 demesync = Deme(demespec)
 bcsync = BraidChain(braidchainconfig,demesync)
-sync!(bcsync,braidchainconfig)
+sync!(bcsync)
 @show tally = count(index,bcsync)

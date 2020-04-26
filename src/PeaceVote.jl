@@ -1,11 +1,20 @@
 module PeaceVote
 
 using Base: UUID
-using DemeNet: Signer, Certificate, Deme, Profile, AbstractID, AbstractPlugin
+using DemeNet: Signer, Certificate, Deme, Profile, AbstractID, AbstractPlugin, Plugin, AbstractInitializer, config
 
 ################## The API of PeaceFounder #################
 
 abstract type AbstractChain <: AbstractPlugin end 
+
+AbstractChain(deme::Deme,config) = Plugin(AbstractChain,deme,config)
+
+function AbstractChain(deme::Deme) 
+    initializer = AbstractInitializer(deme)
+    conf = config(initializer)
+    AbstractChain(deme,conf)
+end
+
 abstract type AbstractVote end
 abstract type AbstractProposal end
 abstract type AbstractBraid end

@@ -1,8 +1,3 @@
-import Pkg
-Pkg.add("PeaceCypher")
-
-using PeaceVote
-
 module BraiderTest
 include("braider.jl")
 end
