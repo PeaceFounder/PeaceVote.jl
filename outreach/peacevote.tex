@@ -221,29 +221,145 @@ Additionally during the braiding participants does certify the ledger. This make
 
 \subsection{Proposing and Voting}
 
+After braiding each memeber owns a chain of anonimized pseudonyms (KeyChain) which can be used to sign messages in our situation votes. However each psuedonym is itself anonymous and part of the braidchain which one should one use? Is newest one enough? 
+
+Before the vote an elligiable memeber makes a proposal (by default all PeaceVote memebers can make a proposal but not with their pseudonyms). The proposal for the PeaceVote is one of the most abstract it can be for a voting system. In itself it contains two important properties - how the votes for it are going to be counted and what is the input from the user - is it a single question with multiple options or it is a whoole survey a list of questions for which voter is forced to decide on the priorities of the organization in interconnected way having a constraint like in quadratic voting.
+
+The proposal again is registered to a BraidChain to allow everyone who has access to votes count them and to avoid a situation where a proposal gets changed to deliver an opposite outcome. Additionally it defines a set of pseudonyms by the position in the BraidChain which makes a cut to it. This way each anchor pseudonym would have only one vote.
+
+The last step is done by the voter. He synchronizes his braidchain with the guardian and checks it's integrity (see next subsection on validation). Then he filters out the proposals from the BraidChain which are then parsed by user application of the PeaceVote and shown on the screen. To vote user would select a proposal and fill it as specified which he then would sign with keychain:
+\begin{lstlisting}
+    option = Vote(index,choice)
+\end{lstlisting}
+The 'index' is the place in the braidchain of the proposal which determines on which proposal one votes on and at the same time defines elligiable set of pseudonyms. The 'choice' is the result of filling out the proposal which has an arbitrary type as proposals can be of many kinds. And the final part is created vote by difitally signing the option by a corresponding pseudonyum in the keychain.
+\begin{lstlisting}
+    vote = Certificate(option,keychain)
+\end{lstlisting}
+And finally delivers the vote anonymously by the options specified by the guardian:
+\begin{lstlisting}
+    record(braidchain,vote)
+\end{lstlisting}
 
 \subsection{Validating and Counting}
 
+When the end of voting period had happened it's time to collect votes, validate their elligiablity and count them. The votes themselves can be either published in the braidchain immediately, can be delayed and published later or can be kept in secret which can be useful for implementing antibribery and anticoercion mechanisms (see the next subsection). The second part when all votes had been collected is to validate them, which means that the vote had been signed by a pseudonym created in the process of braiding from root pseudonym and specified by the place of a proposal in the BraidChain. And the last part is to count them as defined by the type of a proposal.
 
-\subsection{Defence}
+Assuming that all votes had been collected whihc by default in PeaceVote are stored on the BraidChain providing tamper resistance the next step is to validate the BraidChain which can be seperated in a following steps after the ledger had been properly synchronized:
+\begin{itemize}
+\item Parsing. At this step ledger which is just an array of byte voctors 'Vector{Vector{UInt8}}' is parsed to a `Vector{Union{Certificate,Contract}}` where certificate/contracts contains the doucument and its signatures:
+\begin{lstlisting}
+    parsedledger = parse(braidchain.ledger)
+\end{lstlisting}
+\item Validation of immutability. Move through each element in parsedledger and validate that hashes specified in the braid coresponds to hashes of the local ledger:
+\begin{lstlisting}
+m = validateimutability(parsedledger,deme.notary.hash)
+\end{lstlisting}
+returns integer m up to which hashes in the braids do agree with hashing of the local ledger.
+\item Attestation. At this stage the certificates and contracts are cryptographically verified producing `Vector{Union{Intent,Consensus}}'. Intent and consensus contains the documents and IDs of who issued the signatures. The operation for this procedure can be performed as follows:
+\begin{lstlisting}
+    verifiedledger = attest(parsedledger,deme.notary)
+\end{lstlisting}
+\item The last step is to validate the ledger for it's integrity. The result of validation is an index until which the ledger is considered valid. The validation procedure can be described as follows:
+  \begin{itemize}
+  \item Initialization. Create an empty set for current pseudonyms. And also create a mutable set of parameters - current authorithies who can isssue memeber certificates, a current hash of the ledger. 
+  \item Loop. Move through each element in verified ledger
+  \item If the element is Intent{Config}. Validate that it comes from the guardian and if so update mutable set of parameters with approved authorithies who can issue a new member certificates. Else break.
+  \item If the element is Intent{ID} and is signed by a current authorithies add the pseudonym to the current pseudonyms. Else break.
+  \item If the element is Consensus{Braid} and is signed by N current pseudonyms where N is number of new pseudonyms, then swap pseudonyms form the current pseudonym set as specified by the braid. Else break.
+  \end{itemize}
+\begin{lstlisting}
+    n = validateintegrity(verifiedledger,deme.demespec.guardian)
+\end{lstlisting}
+\end{itemize}
+In case the n or m is smaller than the length of the ledger end of the ledger is being cut, the ledger again synchronized with the guardian certified server and the procedure repeated for the end of the ledger.
 
+After the validation of the ledger we can opperate on the data. First we can extract the proposals from the verified ledger which one does as follows:
+\begin{lstlisting}
+pindexes = proposals(verifiedledger)
+\end{lstlisting}
+which will return the indicies of the proposals in the ledger. For each proposal index, first we can get the coresponding proposal:
+\begin{lstlisting}
+proposal = verifiedledger[pid].document
+\end{lstlisting}
+The votes can be obtained by:
+\begin{lstlisting}
+votes = getvotes(pid,verifiedledger)
+\end{lstlisting}
+where each vote is filtered by the braidchain. The proposal may contain end date proposal.date when the voting on the proposal ends which can be incooperated by slicing the verifiedledger.
+
+The final procedure is counting. To do so the user does:
+\begin{lstlisting}
+tally = count(proposal,votes)
+\end{lstlisting}
+where one can implement whatever method of counting one wishes. Whether votes can be changed after casted, whether it is a preferential ballot, or multiple question ballot with a constraitn, for example, a budget, queadratic voting. All theese are trivial to implement for the message based voting system.
+
+\section{Adversaries and defence}
+
+I identify three types of attacks adversary could exercise. The first one is attack on the network infrastructure. In this category we have DDOS attacks and attacks on TOR network to reveal the real identity. The second type is infiltrator attack where adversary is part of the system in this case either guardian, mixer, or some coalition of members. And the third kind is an attack on the secrecy of the voter. First it could be malware/spyware on the device or it could be coercer/briber who convinces the voter to colaborate.
+
+\subsection{Attacks on network infrastructure}
+
+Online systems are prone to attacks which can make them offline. Often that is achieved by buying bootnet to make requests on the serveices until they do overload which is definition of DDOS attack. No online ssytem is protected from this kind of attack, however, one can always reason about the costs.
+
+The charetaristics of PeaceVote system allows to distribute load over extended period of time. The braiding procedure which requires stable network and stable operations of gatekeeper and mixer are not required to happen at the ellection day. Thus DDOS attacks on braider become increasingly costly.
+
+The other DDOS attack on election day can happen on the vote recorder. In the current design of PeaceVote the remedy is to use shields which filter out true votes from fake ones. Since all authetification data is in the BraidChain which is available to everyone such shields would be easy to set up if necessary.
+
+Another kind of attack we need to be aware of is the attack on the network anonimizer, for example, TOR netok. It is known that if ISP is all powerfull and records all inputs and outputs the identity can be deanonimized in some given time period. Or there could be infiltrator attacks on the TOR network itself which could make connections with inputs and outputs. The question is how plausable it is?
+
+We can consider Edward Snowden's location as target of USA governement. The information on his ip address could quicly would lead where he is located thus he may just refuse to use it. On the other hand he knows that TOR network makes his IP address untracable which allows him to use interenet and for example participate in discussions in media, conferences and etc where ends of TOR are assigned to his identity. To this point Eduward Snowden had not yet been found proving the strength of anoninimity of the TOR network. 
+
+\subsection{Infiltrator attacks}
+
+The other kind of attacks is when adversory had aquired control over some part of the infrastructure including members. Realisticallly that could hapen due to some security flaw which allows to gain control of the servers or the people themselves had become corrupt due to some circumstances. In any case it is necessary that the adversory can be detected, isolated and its attack defended. We shal consider three kinds of adversories and their colobaraions. The vicios guardian, mixer and coalition of a subset of members.
+
+The isolated guardian as adversory can block accesability of services and filter out which votes he would like to accept with the recorder and also accept fake identities. In the case when the guardian blocks accesability it could turn out to be tricky to detect whether it is due to him being corrupt or due to receiveing a DDOS attack, however for the later if shield or even multple ones are used the attack could be defended by a wise guardian. Thus its impeachment due to DDOS attack should not be symphatized with.
+
+The guardian is also responsable on acceptance on new memebers. A legit question for a participant would be whether thoose are actually real. This question can be tested statistically. To do so a random set of participants are selected and thoose identities then are mached with the guardian published contact details which should lead to some social network network or etc. The last step is then to contact thoose people to see whether they know that they are part of the deme.
+
+The other malicios action which guardian could do is to accept for recording only thoose votes which are of his liking. To detect such situation trustworthy the vote can be delivered first to a policing authorithy with TOR which then tries to publish it to the recorder. If it fails it sends the vote to the next policing authorithy which again tries to publish that. In this way consensus of corrupt guardian would be created and thus could be impeached.
+
+The guardian is also responsable in ensuring that mixer and memebers are not breaking down the service. In the case of mixer the most malicious thing would be to alter the ballots by inserting his own pseudonym or just slightly corrupting it. In such action the braid would come to participants where one would find it corrupt and thus refuse to sign i breaking the protocol. At this point the guardian does have a hard time to deciding on who to blame.
+
+At this point the guardian has two things he can try. First one he can try to repeat the braiding procedure by excluding thoose who refused to sign the ballot until the braiding protocol succeeds. And later one letting thoose who terminate the protocol braid with themselves. If that fails a significant number of participants had entered the braiding prison the guardian might suspect that the mixer is corrupt which he can let publically known. The solution here is just to issue a new configuration which uses a new mixer which a trustworthy guardian should do regualrly anyways which we will now consider.
+
+The next type of advisory is one who controls the mixer and the gatekeeper. Such sitution easally rises when in the PeaceVote protocol mixer is self hosted by the same guardian. In such situation advisory can silently record aditional data which allows to reveal identities with coresponding pseudonyms. To prevent rise of such situation the participants may require that the mixer is changed regularly and that the mixer is served by other trustworthy guardian on the internet.
+
+\subsection{Secrecy attacks}
+
+The last type of advisory is one who attacks the secrecy of the voter. In paper ballot system only the voter knows the secret on how he voted on and thus the briber/coercer is powerless on whether the voter is telling the truth unless he uses a lie detector or something. In electronic voting there are no way to ensure that the voter is voting on the device without adversary behind his back observing. Additionally the advisory could be operating anonymously behind the internet or the device the voter uses could have malware/spyware. 
+
+To avoid malware/spyware a certification procedure is used. The goal is to avoid mlaware/spyware to come form the PeaceVote protocol which is open to extension with different cryptographic methods, network anonimizers and etc. As described in certification section the PeaceVote protocol could perform self-consitency checks with already trusted sources before using a new component. Initial trust source as package repository would be provided by the distributor of PeaceVote.
+
+The next type of malware/spyware could come from the device itself. First it could come from an another application on the device. To avoid such situations Vendors are already putting applications in containers which do have restricted access. In the end thus it is Vendoors responsability that device does not have a malware on it. That currently, for example, allows mobile banking to happen without major issues of fraud. Thus why not make the same trustworthyness assumption on electronic voting?
+
+The first an most dangerous attack on secrecy is by anonymous briber/coercer. The briber can exchange certian amount of money for an exchange of vote. Additionally for the PeaceVote protocol the briber could ask for the psudonym key itself which they could use for unlimited voting while still having a backing from a real identity.
+
+To fight selling of pseudonyms online we need to prevent it's extraction from device. It could be made possible that the keys are stored and generted during braidng in the smartcard itself thus preventing its users to sell their pseudonyms. The identity pseudonym then could be signed by a Vendoor issued key on the card itself to prove that issued key and derived ones in the process of braiding are not possible to be extracted. The card itself then can be verified with biometrics (with which I mean one signs video chat with the key on the card or etc.) that it does belong to a real person.
+
+Not able to buy pseudonyms the briber/coercer would turn to buy votes instead. In the case of anonymous advisory the strategy would be that the vote would be collected by it before delivered to the recorder in that way ensuring that an existing vote is not smuggled into him. Additionaly he may only give payment after the ellections had ended and the bought vote had been accuratelly voted on.
+
+To solve such issue most voting systems implement some form of receipt freeness or as I like to simplify prooflessness. In the PeaceVote system prooflessness can be implemented if the votes are not published but only the tally at the end of the vote. Then one can implement ability to silently change the vote after it had already been sold to briber/coercer. But in doing so one sacrifices transperancy, particularly, universal verifiabliity of the voters for prooflesseness. The votes though themselves can be universally verified by the permitted personel.
+
+Perhaps a more succesfull extension to the PeaceVote system would be if the voter would have ability to choose whether the vote is going to be public or hidden. By default the voter would publish the vote for everyone to see, but in the case there are opportunity to sell it to the briber he/she does so. But after the fact submits a new vote which remains hidden from everyone except from the guardian (or his derivative) who after elections issues correction to the public result as a tally.
+
+As long as the election result, who happens to be ellected and who not, is determined from the publically available ones there would be no point to look question the integrity of the guardian who counts the hidden votes. Furthermore to prevent maliciosness of the guardian independent audtitor could be used to recount the correction.
+
+Similarly the same bribery/coercion mechanism could work in person as long as the briber is not looking behind the back of the voter and then collect the device after the vote until the end of ellections. To prevent such scenario the voters should have ability to defend themselves, for example, by issuing a tagged vote in the presence of briber/coercer which would give a signal to authorities that a possible crime is happensing and try to catch briber/coercer while the crime is happening. 
 
 \section{Discussion}
 
-\begin{itemize}
-\item Bribing, secrecy and individual verifiability
-\item State insatlled malware/spyware to the devices
-\item The biggest mixnet due to oppenness
-\item Whistleblowing
-\item Voters need to have an application installed on their devices. Self consistency seems like good way to go. Tape like storage and external certification (one always need to be prepeared that the certifier could be the actual villan). 
-\item Complex though the setup can be automatized making it one of the easiest system to set up. Does not require a permanent ip address. It is fine to have have a single server.
-\item The system in strongly software independent for voting. The ssytem does not contain hidden state and can be reset/restarted at any time with the publically available data.
-\item The guardians are powerless. Their wise actions and reputation is what matters for a new guardian to show up and impeach the old one.
-\item Additional services with DemeNet makes sense. There could be a place for a chating and messaging service. A localized search engine. A news distributor where the voting could allow for subscribers to decide uppon what content they would like to see and thus giving innitiative to pay subscriptions. 
-\item The system scales in two directions. Though one may wish to fragment it to some regions and etc. to limit the processing power and storage needed for participants.
-\item In contrast to blockchain ideology, it is fine to start small. The trust is bulit from wise actions and not from competions of wasted work (PoW) and/or legitimatized inequality (PoS).
-\item The interent had become dystopia, full of tracking and suspicion of sincerity of information. It's time to come togehter and start to found some peace with the world around us. Its time to voice of expressing trust and breaking systematic media surpression of public opinion.
-\end{itemize}
+Electronic voting is a very complex problem which can have a great consequences on the democracy. Each system comes with its own need of expert knowledge and thus discussion of the most trustworthy design publically could potentially be steered to insecure systems to the benefit of capital. It is thus important to battle test voting systems and start small. As the power of democracy built with them becomes larger they stand a chance to gain interest for hacking by coorporations and capital who are interested that there would not be such thing as a society.
+
+The PeaceVote voting system while complex is the first system which achieves a true transparency, security and privacy. The trust on it is derived from thoose components and not from a trusted personel. The system in strongly software independent for voting. The ssytem does not contain hidden state and can be reset/restarted at any time with the publically available data. The guardians are powerless. Their wise actions and reputation is what matters for a new guardian to show up and impeach the old one. The design allows to have a largest mixnet cascade which is possible due to oppenness and introduced process called braiding. The system scales in two directions. Though one may wish to fragment it to some regions and etc. to limit the processing power and storage needed for participants.
+
+Although complex it is one of the easiest to set up. In contrast to blockchain ideology, it is fine to start small. The trust is bulit from wise actions and not from competions of wasted work (PoW) and/or legitimatized inequality (PoS). A new guardian can start with a single raspberry pi and use automatic configuration which would generte a key for the deme and for the server which does not requitre a permanent ip address or SSL certificate to be trustoworthy. Then to use it voters only need to install application on their smartphones which would allow to participate in different demes. 
+
+The PeaceVote voting system also allows easally to be used for whistleblowing where in place of issuing votes one can just sign a leaked document with a psuedonym. This could be particulalry useful for coorperations which accorindng to most democratic european laws require that whistleblowing should be possible and even encouraged to prevent ill effects on society. Ensuring a strong anonimity of whistleblowers is what PeaceVote can do. 
+
+The infrsastrucure around PeaceVote is more generic than the voting itself. Particularly DemeNet addresses issue of requiring SSL certificate isued by authorithy which is substituted with self consistency and directly distributing the ids of the guardians. That allows easally add other ser services like chatting, messaging service. A localized search engine. A news distributor where the voting could allow for subscribers to decide uppon what content they would like to see and thus giving innitiative to pay subscriptions.
+
+The interent had become dystopia, full of tracking and suspicion of sincerity of information. It's time to come togehter and start to found some peace with the world around us. Its time to voice of expressing trust and breaking systematic media surpression of public opinion.
 
 \begin{thebibliography}{9}
   
