@@ -1,10 +1,10 @@
-# Abstract 
+# Abstract
 
-The electronic voting problem had been studied extensively for decades. However, no technology had achieved the same of trustworthiness as a regular paper ballot which is the only robust software-independent voting system capable of preserving participant privacy. A software independent, voting system designs which preserve privacy are possible if shuffling of votes are decentralized, but such a system would be extremely fragile and unpractical. In this paper, I propose identity braiding as a method for eliminating fragility of mixnet cascades for electronic voting applications and discuss a specific implementation of electronic voting for the PeaceVote electronic voting system. 
+The electronic voting problem had been studied extensively for decades, but still, the regular paper ballot is currently the only design capable of combining strong software-independence and voters privacy. I discuss that all electronic voting systems are doomed because of authentification itself is not anonymous, and mixnet cascades must be trusted to avoid the absence of election results leading to dystopian designs where we are obligated to trust authority which is a biological machine running software itself. To come around authentification pit hole, I propose braiding as a method to generate anonymous pseudonyms on absolute consent basis of each participant. I demonstrate how braiding can also be used to form immutable ledger BraidChain and how all those elements come together in the PeaceVote protocol where all trust in the authority had been decentralized in the trust of the software running on the devices. Lastly, I will cover network infrastructure, infiltrator and secrecy attacks and how those are resolved. 
 
 # Introduction
 
-In a regular paper ballot, everyone can see that officials are acting according to agreed and fair rules as are also able to become the part of them without particular expert knowledge. On the contrary electronic voting, schemes suffer from openness and transparency, leaving doubt on whether the election officials are running the software that they claim to do and are not producing fake proofs to support their claims. That made Ron Rivest introduce a term software independence - a software is said to be software independent if election outcome is independent of undetected modifications to the software which runs the elections [Rivest].
+In a regular paper ballot, everyone can see that officials are acting according to agreed and fair rules as are also able to become the part of them without particular expert knowledge. On the contrary electronic voting, schemes suffer from openness and transparency, leaving doubt on whether the election officials are running the software that they claim to do and are not producing fake proofs to support their claims. That made Ron Rivest introduce a term software independence - a software is said to be software independent if election outcome is independent of undetected modifications to the software which runs the elections.
 
 It is rather easy to design an electronic voting system which is software-independent but does not preserve privacy. In a simple design, each citizen would own state-certified public/private key pair which forms a digital identity of the person. To run the elections, the state would publish possible option messages. It would collect option certificates (signed documents) from the voters and publish them to for everyone accessible bulletin board which everyone could use for verifying and counting the votes. 
 
@@ -14,23 +14,29 @@ The second issue comes from the execution of the protocol itself. Although the p
 
 This reasoning allows us to split software-independence into two logical components. First one is security with which we shall understand machines (including humans) which execute the election software, collects votes and produces data. With transparency, we shall understand all data forming a conclusive proof that the system had been software-independent by producing election outcome and applies software independence recursively to the proof itself. So the trust is a combination of security, transparency and privacy, which we can visualize in a Venn diagram as shown figure...
 
-![Fundamentals of building trust in election results.](figures/trust)
+![Fundamentals of building trust in election results. Security coresponds to all hardware running services for voting system on behalf of the election officials (guardian). Transparency coresponds to all data which proves conclusevly that ellections results are software independant. Privacy is the quality of decission which is made appart from any observation at the moment (Privacy-Security) and after the vote (Privacy-Transparency).](figures/trust)
 
 The main difference between a paper ballot and mainstream electronic voting solutions is by a number of machines (including humans) adversary needs to hack to compromise the proofs security-transparency (some policing officials in the paper ballot system) and to compromise the anonymity-security (an official collaborating with briber). A private company can be isolated from society (NDA agreements, individual selection, etc.), and thus, it makes it easier to hack. On the other hand, hacking software all election officials who with their social circles cover all society is impossible without being obvious. This leads us to an idea that a secure election system must be open to participation so it could run synchronically on multiple machines at once tied to social circles which can cover all society.
 
 Most of the voting systems on the literature consider a rather peculiar adversary model. When the voting protocol is modelled as a process, certain parts of the protocol are trusted for verifiability. So voter could get a casting assurance (individual verifiability), and able to validate that only eligible voters had participated, they had voted once, and that the votes had been counted accurately (universal verifiability) and making it end to end verifiable, he/she still would need to trust the verifying system. 
 
-A similar situation is present for ensuring the anonymity of the vote, when the anonymity preserving system, for example, a mixnet cascade is often assumed to be held private to avoid malicious activities which can result in the absence of election results. Nevertheless, if we need to trust private mixes, the system nevertheless of the protocol centralised although a more disperse. Additional data revealing anonymity can be recorded (as long as authentification is part of a private system) and the organisation can generate necessary proofs of fair elections. Can we avoid those issues in the electronic voting system design?
+A similar situation is present for ensuring the anonymity of the vote, when the anonymity preserving system, for example, a mixnet cascade is often assumed to be held private to avoid malicious activities which can result in the absence of election results. Nevertheless, if we need to trust private mixes, the system nevertheless is centralised although a more disperse. Additional data revealing anonymity can be recorded (as long as authentification is part of a private system) and the organisation can generate necessary proofs of fair elections. Can we avoid those issues in the electronic voting system design?
 
-The success of TOR shows that decentralised anonymous network of mixnet cascades can exist allowing to resist government censorship and hiding identity as Edward Snowden from the USA. Other approaches based on mixnets, crowds, onion routing, dc nets are actively developed and deployed [...]. When evaluating the anonymity of such systems, one also should take a realistic point of view of the adversary who would not be able to control every ISP of the world anonymize the traffic. Thus with the delocalisation and companionship, we can already today use quite strong anonymous sockets.
+The success of TOR shows that decentralised anonymous network of mixnet cascades can exist allowing to resist government censorship and hiding identity as Edward Snowden from the USA. Other approaches based on mixnets, crowds, onion routing, dc nets are actively developed and deployed. When evaluating the anonymity of such systems, one also should take a realistic point of view of the adversary who would not be able to control every ISP of the world to deanonymize the traffic. Thus with the delocalisation and companionship, we can already today use quite strong means to exchange messages anonymously (anonymous sockets).
 
-However, anonymous sockets yet do not allow to avoid tracking. Unless the electronic voting is an anonymous pool where a voter can vote multiple times, the election voting system is going to have authentification. An attractive solution would be to use linkable ring signature scheme, sign the votes with that and deliver to the vote recorder with an anonymous socket. Unfortunately, linkable ring signatures suffer from their length and computational requirements and thus are not practical. Therefore for a sound system, we shall focus anonymisation of pseudonyms which can be used for authentification of voting messages. Anonymisation of pseudonyms has been studied lately with the context of blockchain and smart vehicle networks VANET. For blockchain coin shuffle had implemented as additional service which shuffles the transactions making them untraceable. In vehicular networks, the authority would be a benefit to know information on infrastructure quality for further improvement, and vehicular networks seem like a perfect solution where to protect privacy mix zones for changing pseudonyms is currently actively studied. However, the proposed schemes do suffer from the necessity to trust the mixing authority and sometimes also a necessity to trust other participants in the mix. Also, the anonymity of those schemes is of a concern since network anonymisation is often disregarded.
+However, anonymous sockets yet do not allow to avoid tracking. Unless the electronic voting is an anonymous pool where a voter can vote multiple times, the election voting system is going to have authentification. An attractive solution would be to use linkable ring signature scheme, sign the votes with that and deliver to the vote recorder with an anonymous socket. Unfortunately, linkable ring signatures suffer from their length and computational requirements and thus are not practical. Therefore for a sound system, we shall focus anonymisation of pseudonyms which can be used for authentification of voting messages. 
+
+Anonymisation of pseudonyms has been studied lately with the context of blockchain and smart vehicle networks VANET. For blockchain coin shuffle had implemented as additional service which shuffles the transactions making them untraceable. In vehicular networks, the authority would be a benefit to know information on infrastructure quality for further improvement, and vehicular networks seem like a perfect solution where to protect privacy mix zones for changing pseudonyms is currently actively studied. However, the proposed schemes do suffer from the necessity to trust the mixing authority and sometimes also a necessity to trust other participants in the mix. Also, the anonymity of those schemes is of a concern since network anonymisation is often disregarded.
 
 In this paper, I will propose a new pseudonym anonymisation scheme using only public-key cryptography which is suitable as substitutes for linkable ring signatures. Then I will show how to use them for electronic voting when simultaneously multiple proposals are voted on with PeaceVote system. Furthermore, I will touch on the issue of testing of the system for small communities, distributing software in a trusted manner while not being dependent on usual SSL certificates as well as how members can be added easily without making the system look complex for the voters. I would also argue that the resulting voting system is strongly software-independent due to the fact the anonymisation of pseudonyms is done in small batches and is strongly anonymous because of openness for participation. 
 
 # Anonimous pseudonyms
 
-Imagine an ordinary election. You go to pooling station; greet the gatekeeper who checks your passport; go to a voting booth but then instead of putting your pick for officials you put in the envelope your just generated pseudonym, close the envelope un deliver that to the ballot box. After the elections officials publish all pseudonyms in bulletin board (roster). The generated pseudonyms in this fashion would have two excellent properties; namely, they would be anonymous and at the same time would be legitimate means to be used for signing votes. We shall call such process braiding as it does have a natural hair-like structure with knots making hairs indistinguishable and also corresponds terminology used for operations on a quantum computer forming a superposition of qubits.
+![The pseudonym braiding process. Lines represent pseudonyms, whereas nodes represent braids. The new pseudonyms coming from braids increase their anonymity set size, as shown at the end of the lines with numbers.](figures/braiding)
+
+Imagine an ordinary election. You go to pooling station; greet the gatekeeper who checks your passport; go to a voting booth but then instead of putting your pick for officials you put in the envelope your just generated pseudonym, close the envelope un deliver that to the ballot box. After the elections officials publish all pseudonyms in bulletin board (roster). 
+
+The generated pseudonyms in this fashion would have two excellent properties; namely, they would be anonymous and at the same time would be legitimate means to be used for signing votes. We shall call such process braiding as it does have a natural hair-like structure with knots making hairs indistinguishable and also corresponds terminology used for operations on a quantum computer forming a superposition of qubits.
 
 Braiding, in essence, solves the anonymous authentification issue the problem is, however, how can we substitute paper ballot with an electronic one. It may sound like a chicken and egg problem since we need to solve electronic voting to do the pseudonym braiding, but it is not quite so. One of the excellent properties of signatures made by pseudonyms is that they are linkable. The linkability allows doing multiple small braids allowing to use multiple small but absolute consensus ballots as shown in the figure... Those small ballots then can be created by multiple different braiding stations which do not need to be trusted since a lack of coordination preserves anonymity. 
 
@@ -40,9 +46,9 @@ The fragility of the system can be resolved with two instruments. The first one 
 
 Nevertheless, who should do the braiding? Multiple systems could fit in as voting protocols based on dc nets and p2p networks with which one could do braiding without any authority. For mixnets, it is necessary to trust the authority that no data is being recorded, which can be used to reveal the anonymity. If only a single mixnet participates which is maintained by the same organization/person, then the anonymity of the vote, in the end, is equivalent to the anonymity which would be provided by a conventional mixnet electronic voting system. 
 
-The fix for that comes from the fact that we no longer need to trust the mix to do its job since, in the end, participants control with absolute consent whether to accept and sign or discard the braid. That allows forming a system where mixes are distributed over all internet and hosts mixing service irrelevant of who may use it. That allows to make a braid cascade from multiple mixes and thus resolves any concerns of possible anonymity revealing data as long there is not an initiative to coordinate. In the end coordination of mixnet is a threat to anonymity, thus any necessity of that should be eliminated.
+The fix for that comes from the fact that we no longer need to trust the mix to do its job since, in the end, participants control with absolute consent whether to accept and sign or discard the braid. That allows forming a system where mixes are distributed over all internet and hosts mixing service irrelevant of who may use it. That allows to make a braid cascade from multiple mixes and thus resolves any concerns of possible anonymity revealing data as long there is not an initiative to coordinate as coordination of mixnet is a threat to anonymity, thus any necessity of that should be eliminated.
 
-Openness can be considered as opposite to coordination. The voting system must be developed from the effort of the community, and as the open-source world had shown monolithic designs fail to attract interest. Thus, on the one hand, it is essential from the one hand to make the system such that it is easy to start whereas on the other it must not lose the ability customized without breaking off from the existing ecosystem. Thus, in the end, every party would find its place within the ecosystem and so make a pool of available mixers bigger. 
+Openness can be considered as opposite to coordination. The voting system must be developed from the effort of the community, and as the open-source world had shown monolithic designs fail to attract interest. Thus, on the one hand, it is essential to make the system such that it is easy to start whereas on the other it must not lose the ability to be customized without breaking off from the existing ecosystem. Thus, in the end, every party would find its place within the ecosystem and so make a pool of available mixers bigger. 
 
 # PeaceVote
 
@@ -56,15 +62,16 @@ We shall separate the discussion of the proposed voting system in the following 
 - counting and verifying;
 - defence. 
 
-As any voting system, it needs a maintainer, administrator and protector which we shall name as guardian which can be a single person or whole organization. The guardian in the PeaceVote system is responsible for the following actions:
+As any voting system, it needs a maintainer, administrator and protector which we shall name as guardian which is either a single person or an organization itself. The guardian in the PeaceVote system is responsible for the following actions:
 
 - Start the services necessary for the voting system;
 - Making choices on cryptography used (public key system, hashing, encryption, randomness);
+- Makes choice on the method for anonymizing the traffic (TOR or etc.)
 - If applicable, selects mixers for braiding. Sets up a number of participants for the braid;
 - Approves new members for the voting system;
 - Defends the system against DDOS attacks and malicious pseudonyms;
 
-All those choices must be transparent and available for public scrutiny to change the guardian if no confidence had been expressed. 
+All those choices must be transparent and available for public scrutiny to impeach the guardian if no confidence had been expressed. 
 
 Currently, it is considered the best practice to issue SSL certificate on the internet service to make it available for secure access anywhere. That, however, is unsuitable for a voting system where we need to consider such authority to be malicious or even worse selectively malicious. Also, SSL certificates introduce complexity for setting up the system for the guardian, which we would like to make as seamless as possible.
 
@@ -97,14 +104,14 @@ server = Signer(deme,"server")
 ```
 where `deme` is a primitive which additionally with `demespec` also had loaded notary for performing digital signatures and cypher for establishing secure communications with authenticated Diffie-Hellman key exchange.
 
-The next step is to set up the configuration for the braider of the mixnet type. The mixnet braider consists of two parts - it is a gatekeeper and the mixer. The gatekeeper is responsible for authentification with pseudonyms. It is responsible to redirect connection directly to the mixer where a new pseudonym is sent and later redelivered back to gatekeeper sorted and forwarded to participants for forming the contract. 
+The next step is to set up the configuration for the braider of the mixnet type. The mixnet braider consists of two parts - a gatekeeper and the mixer. The gatekeeper is responsible for authentification with pseudonyms. It is responsible to redirect connection directly to the mixer where a new pseudonym is sent and later redelivered back to gatekeeper sorted and forwarded to participants for forming the contract. 
 
-The guardian needs to specify the message length and the number of participants for the braid, as well as authentification details for the mixer. Since the mixer is expected to be from a different deme, we define its id with `DemeID` which contains UUID of the deme, and thus cryptographic primitives can be loaded from the demespec file stored. The configuration then can be created as:
+The guardian needs to specify the message length and the number of participants for the braid, as well as authentification details for the mixer. Since the mixer is expected to be from a different deme, we define its id with `DemeID` which contains `UUID` of the deme togehter with the pseudonym `ID`, and thus cryptographic primitives can be loaded from the demespec file stored. The configuration then can be created as:
 ```
 braiderconfig = BraiderConfig(BRAIDER_PORT,MIXER_PORT,
     UInt8(3),UInt8(64),SERVER_ID,MIXER_ID)
 ```
-where `BRAIDER_PORT` and `MIXER_PORT` also contain information to establish a socket with server and mixer. `PeaceVote` only approves integers referring to local ports but with the power of multiple dispatch that can be extended with an external package with its own port type. That is particularly useful in a sense that `PeaceVote` does not need to specify whether the server is an ordinary server with IP or hidden service in the TOR. Also, it is useful to specify how the ports shall be contacted anonymously, whether it is over a TOR network or another way which must be specified by the guardian since anonymity loves company.
+where `BRAIDER_PORT` and `MIXER_PORT` also contain information to establish a socket with server and mixer. `PeaceVote` only approves integers referring to local ports but with the power of multiple dispatch that can be extended with an external package with its own port type. That is particularly useful in a sense that `PeaceVote` does not need to specify whether the server is an ordinary server with IP or hidden service in the TOR. Also, it is useful to specify how the ports shall be connected anonymously, whether it is over a TOR network or another way which must be specified by the guardian since anonymity loves company.
 
 The next element needed is a configuration of the recorder. The recorder as name states is collecting certified applications, contracted braids, certified proposals and certified votes. The software running it is responsible for preventing redundant information to take part in the ledger. The configuration can be given as follows:
 ```
@@ -118,23 +125,25 @@ The last part of the protocol is to decide upon the mixer service, which can be 
 braidchainconfig = BraidChainConfig(SERVER_ID,MIXER_PORT,
     SYNC_PORT,braiderconfig,recorderconfig)
 ```
-Currently, only a single braider is provided. It is assumed that the guardian periodically changes the braiderconfig, thus preventing adversary to (even guardian) collect necessary data from mixers and guardians for revealing the identity of the pseudonym. It is possible to run multiple braiders at the same time, but one then would need to deal with scheduling strategies, etc which are not important for the content of this paper of understanding the PeaceVote system.
+Currently, only a single braider is provided. It is assumed that the guardian periodically changes the braiderconfig, thus preventing adversary (even guardian) to collect necessary data from mixers and guardians for revealing the identity of the pseudonym. It is possible to run multiple braiders at the same time, but one then would need to deal with scheduling strategies, etc which are not important for the purpose of this paper for understanding the PeaceVote system.
 
 To start the server, the guardian initializes a `BraidChain` which contains ledger, configuration and deme. `BraidChain` contains all necessary elements analyses the data collected by the ledger like to count votes and to participate in the system.
 ```
 braidchain = BraidChain(braidchainconfig,deme)
 ```
-It was a conscious choice that the server and the user use the same configuration data, which shows that the system does not have a hidden state. A new guardian can take the place of the old ones with the data available in the braidchain and configure further evolution of the community at his wish. Though since demespec is immutable, he would need to form a new UUID for the deme.
+It was a conscious choice that the server and the user use the same configuration data, which shows that the system does not have a hidden state. A new guardian can take the place of the old ones with the data available in the `BraidChain` and configure further evolution of the community at his wish. Though since `DemeSpec` is immutable, he would need to form a new UUID for the deme.
 
 The last step is to start the server:
 ```
 system = BraidChainServer(braidchain,server)
 ```
-which would start all service necessary for the voting system. Since it does not contain any hidden data which one should keep good care of not corrupting (except the server key) it although complex from the point of the number of asynchronous services the system contains it is at the same time pure of side effects. That greatly reduces the maintenance costs as in case of problems one can just reinstall the server, put in back the same key (or a new one) and put in the data of the ledger which is stored by every participant everywhere preventing any corruption. 
+which would start all service necessary for the voting system. Since it does not contain any hidden data which one should keep good care of not corrupting (except the server key) it is pure of side effects. That greatly reduces the maintenance costs as in case of problems one can just reinstall the server, put in back the same key (or a new one) and put in the data of the ledger which is stored by every participant everywhere preventing any corruption. 
 
 ## Certification
 
-The PeaceVote protocol works because the user uses the same software as the guardian. Nevertheless, how could users be sure that during the installation of new software, a spyware/malware had not also been added?
+![The context of self-certification. Vendor and SSL certificate authority has the freedom to inject any kind of malware/spyware on the device during steps 1. and 2. Nevertheless, the hack would need to be sophisticated because of demes, which store manifest files (containing dependency hashes) of all necessary packages and other trusted guardians. That allows us to do self-consistency check of demes themselves (steps 3. and 4.) and also the software itself on the device as long as software doing the verification is trusted step 5.](figures/certification)
+
+The PeaceVote protocol works because the user uses a trustworthy software on his/her device. Nevertheless, how could users be sure that during the installation of new software, a spyware/malware had not also been added?
 
 An ultimate answer to this question for the guardian would be to distribute smartcards which shall be used to ensure that keys are safe and that all signatures made had been logged for accountability of additional device which is necessary to interact with the card.
 
@@ -146,6 +155,8 @@ Another part of the certification is the configuration of the PeaceVote system. 
 
 ## Registration
 
+![The registration and external verification process with public roster. First, registration with recruitment token is shown, which produces an entry in the roster where the guardian certificate of the pseudonym and data containing information to contact the person. The verifier can use the roster to check the realness of a member and inquire the member that he/she indeed owns the specified pseudonym.](figures/registration)
+
 To take part in the deme the guardian or it's delegated authority needs to sign users pseudonym. From the guardian perspective, he is troubled with distinguishing genuine application over boots. In an ideal world, the pseudonym before sent to the guardian would be signed by a personal smartcard or by a state authority confirming users identity through authentification still would reduce us to the need of smartcard or another personal token. However, the ideal world is not always available, and if smartcards are available, those require developer power and some cheesy subscription model which together kills accessibility.
 
 A solution to such problem could be by using our online presence in different social networks, let it be Facebook, twitter, google, LinkedIn, OpenID, etc. which generally do provide enough information for a person to assess whether the person is real or a bot. However, it is close to impossible to make a computer program which would do that automatically.
@@ -155,7 +166,6 @@ The guardian does have three options. The first one is upon application the guar
 The first option is tedious but might be necessary in case high assurance of the identity needs to ensure (investor board meeting). The last option of kicking off unreal members are possible by the guardian issuing order that all pseudonym braiding should restart from their anchors. The second option of delivering a token upon a request is most practical one which is what in one form or another we use daily, and this is the one we shall rely on the daily basis for demenet.
 
 The registration for the DemeNet with tokens is currently implemented with Recruiters package. The algorithm of it is as follows:
-
 
 - The guardian starts the server certifier service and the token receiver service.
 - A potential member is sending the application to the guardian or his delegated trusted people.
@@ -167,6 +177,8 @@ It is important to note that to use Recruiters; the guardian is responsible for 
 A great thing with tokens is that one can send an invitation to people without them making to do work and if they decide to apply, they can do that instantly. This is particularly great to form the demes spontaneously just by starting a server, sending invites to the email, braid and vote. However, users would still need to install an app if it is actively used for multiple demes in the long term such cost would be treated as the cost of installing a web browser.
 
 ## Braiding 
+
+![The braiding process with formation of an immutable ledger - BraidChain. For each braid, each participant had validated that his/her new pseudonym is included and that the hash calculated of the local ledger corresponds to the hash specified in the braid. If every participant had agreed on the contents of the braid (the guardian had collected all signatures), then a braid contract is formed and added to the ledger forming a BraidChain.](figures/braidchain)
 
 At his point the members have been registered, they have loaded the demespec file sent to them together with an invitation. They have synchronized their ledger with the guardian (one way) with the provided information in the invitation, for example, a port and IP address. The ledger contains BraidChainConfig certified by the guardian.
 
@@ -181,20 +193,23 @@ When the keys are loaded with the braidchain the user can gain anonymity by brai
 braid!(braidchain,keychain)
 ```
 This simple command in the context of `SynchronicBallot` is performing the following algorithm:
-    - The user authentificates with the gatekeeper in both directions with the current pseudonym and encrypts the connection.
-    - The gatekeeper forwards the connection to the mixer with which it has authetificated and encrypted.
-    - The user using the same socket is now authenticating the mixer and establishing an encrypted connection.
-    - The user generates a new key and sends the pseudonym to the mixer
-    - The mixer collects all pseudonyms from the participants, sorts them and sends them back to the gatekeeper.
-    - The gatekeeper forms a braid from all collected pseudonyms. Additionally, the guardian adds a hash of the current ledger. (Other relevant metadata can also be added such as time up to which the braid must be published to the ledger, etc.)
-    - The participants validate the braid verifying whether their pseudonym is within the braid and also and also verifying that the hash of the local ledger is the same as hash put in the braid. If validation succeeds the participant signs the braid and delivers the signature to the gatekeeper.
-    - If braiding went successful, the gatekeeper collects all signatures verifies them and publishes the braid to the braidchain. If unsuccessful, the procedure is repeated with variations of a set of participants, perhaps of the mixer, etc.
+
+- The user authentificates with the gatekeeper in both directions with the current pseudonym and encrypts the connection.
+- The gatekeeper forwards the connection to the mixer with which it has authetificated and encrypted.
+- The user using the same socket is now authenticating the mixer and establishing an encrypted connection.
+- The user generates a new key and sends the pseudonym to the mixer
+- The mixer collects all pseudonyms from the participants, sorts them and sends them back to the gatekeeper.
+- The gatekeeper forms a braid from all collected pseudonyms. Additionally, the guardian adds a hash of the current ledger. (Other relevant metadata can also be added such as time up to which the braid must be published to the ledger, etc.)
+- The participants validate the braid verifying whether their pseudonym is within the braid and also and also verifying that the hash of the local ledger is the same as hash put in the braid. If validation succeeds the participant signs the braid and delivers the signature to the gatekeeper.
+- If braiding went successful, the gatekeeper collects all signatures verifies them and publishes the braid to the braidchain. If unsuccessful, the procedure is repeated with variations of a set of participants, perhaps of the mixer, etc.
 
 In this procedure, the user can be the guardian certified pseudonym or any anonymous pseudonym which follows this procedure. If the procedure is repeated, it becomes crucial to anonymize the IP address of the connection which can be done with TOR or others as the guardian wishes to configure that (it can not be up to users deciding how the socket is anonymized because anonymity loves company which leads to a single option).
 
 Additionally, during the braiding participants does certify the ledger. This makes the information stored on the ledger immutable to any adversary. Additionally, that ensures that all members see the same ledger. This is convenient as a place where the guardian could distribute the configuration of the voting system, which prohibits deanonymization attacks by a vicious guardian. Additionally, the ledger is an excellent place to store other information necessary for certification such as used software hashes or other demespec files and thus forming a real deme network or simply DemeNet.
 
 ## Proposing and Voting
+
+![Proposing and voting in the BraidChain. First, an eligible participant creates and puts a proposal to be included in the BraidChain. The position in the chain sets current (newest) pseudonyms as a legitimate set of participants shown as an intersection with blue nodes. Those pseudonyms at any time at the future (unless the proposal has a deadline) voters can use to issue their certified votes and deliver them anonymously to the vote recorder.](figures/voting)
 
 After braiding each member owns a chain of anonymized pseudonyms (KeyChain) which can be used to sign messages in our situation votes. However, each pseudonym is itself anonymous and part of the braidchain which one should one use? Is the newest one enough? 
 
@@ -225,21 +240,19 @@ Assuming that all votes had been collected which by default in PeaceVote are sto
 ```
 parsedledger = parse(braidchain.ledger)
 ```
-- Validation of immutability. Move through each element in parsedledger and validate that hashes specified in the braid correspond to hashes of the local ledger:
+- Validation of immutability. Move through each element in parsedledger and validate that hashes specified in the braid correspond to hashes of the local ledger and return integer `m` up to which hashes in the braids do agree with hashing of the local ledger:
 ```
 m = validateimutability(parsedledger,deme.notary.hash)
 ```
-returns integer `m` up to which hashes in the braids do agree with hashing of the local ledger.
 - Attestation. At this stage, the certificates and contracts are cryptographically verified producing `Vector{Union{Intent,Consensus}}`. `Intent` and `Consensus` contain the documents and IDs of who issued the signatures. The operation for this procedure can be performed as follows:
 ```
 verifiedledger = attest(parsedledger,deme.notary)
 ```
 
-- The last step is to validate the ledger for its integrity. The result of validation is an index until which the ledger is considered valid. The validation procedure can be described as followsInitialisationon. Create an empty set for current pseudonyms, mutable set of parameters - current authorities who can issue member certificates, a current hash of the ledger. 
-- Loop. Move through each element in a verified ledger
-- If the element is `Intent{Config}`. Validate that it comes from the guardian and if so, update the mutable set of parameters with approved authorities who can issue a new member certificate. Else break.
-- If the element is `Intent{ID}` and is signed by current authorities, add the pseudonym to the current pseudonyms. Else break.
-- If the element is `Consensus{Braid}` and is signed by N current pseudonyms where N is a number of new pseudonyms, then swap pseudonyms form the current pseudonym set as specified by the braid. Else break.
+- The last step is to validate the ledger for its integrity. The result of validation is an index until which the ledger is considered valid. The validation procedure can be described as followsInitialisationon. Create an empty set for current pseudonyms, mutable set of parameters - current authorities who can issue member certificates, a current hash of the ledger and iterate through each element in a verified ledger.
+  + If the element is `Intent{Config}`. Validate that it comes from the guardian and if so, update the mutable set of parameters with approved authorities who can issue a new member certificate. Else break.
+  + If the element is `Intent{ID}` and is signed by current authorities, add the pseudonym to the current pseudonyms. Else break.
+  + If the element is `Consensus{Braid}` and is signed by N current pseudonyms where N is a number of new pseudonyms, then swap pseudonyms form the current pseudonym set as specified by the braid. Else break.
 ```
 n = validateintegrity(verifiedledger,deme.demespec.guardian)
 ```

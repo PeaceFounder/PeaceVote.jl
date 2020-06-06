@@ -14,6 +14,19 @@ template(body) = raw"""
 \setlength{\parindent}{0pt}
 \setlength{\parskip}{1.2ex}
 
+\usepackage{placeins}
+
+\let\Oldsection\section
+\renewcommand{\section}{\FloatBarrier\Oldsection}
+
+\let\Oldsubsection\subsection
+\renewcommand{\subsection}{\FloatBarrier\Oldsubsection}
+
+\usepackage{float}
+\floatplacement{figure}{h!}
+
+\usepackage[defaultlines=3,all]{nowidow}
+
 \title{PeaceVote}
 
 \author{Janis Erdmanis}
